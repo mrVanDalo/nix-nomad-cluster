@@ -7,6 +7,7 @@
     nixpkgs-legacy_2205.url = "github:nixos/nixpkgs/nixos-22.05";
     nixpkgs-legacy_2105.url = "github:nixos/nixpkgs/nixos-21.05";
     nixos-hardware.url = "github:nixos/nixos-hardware";
+    nixos-anywhere.url = "github:nix-community/nixos-anywhere";
 
     sops-nix.url = "github:Mic92/sops-nix";
     nixinate.url = "github:matthewcroughan/nixinate";
@@ -35,6 +36,7 @@
     , dns
     , home-manager
     , nixinate
+    , nixos-anywhere
     , nixos-hardware
     , nixpkgs
     , nixpkgs-legacy_2105
@@ -137,6 +139,42 @@
         }
 
       ];
+      final = pkgs;
+
+      generateNixOSAnywhere = flake:
+        let
+          machines = builtins.attrNames flake.nixosConfigurations;
+          validMachines = final.lib.remove "" (final.lib.forEach machines (x: final.lib.optionalString (flake.nixosConfigurations."${x}"._module.args ? nixinate) "${x}"));
+          mkDeployScript = { machine, dryRun }:
+            let
+              n = flake.nixosConfigurations.${machine}._module.args.nixinate;
+              user = n.sshUser or "root";
+              host = n.host;
+
+              script =
+                ''
+                  set -e
+                  echo "👤 SSH User: ${user}"
+                  echo "🌐 SSH Host: ${host}"
+                  echo
+                  echo "🧹 nixos-anywhere --flake .#${machine} root@${host}"
+                  echo "🧹 ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --flake .#${machine} root@${host}"
+                  echo
+                '';
+            in
+            final.writeScript "deploy-${machine}.sh" script;
+        in
+        {
+          nixos-anywhere = nixpkgs.lib.genAttrs validMachines (x:
+            {
+              type = "app";
+              program = toString (mkDeployScript {
+                machine = x;
+                dryRun = false;
+              });
+            });
+        };
+
 
     in
     {
@@ -152,9 +190,7 @@
           ];
         };
 
-      # nixos-anywhere
-      # nix run github:numtide/nixos-anywhere -- --flake .#jumphost root@<ipaddress>
-      apps = nixinate.nixinate.x86_64-linux self;
+      apps = (nixinate.nixinate.x86_64-linux self) // (generateNixOSAnywhere self);
 
       nixosConfigurations =
         {
