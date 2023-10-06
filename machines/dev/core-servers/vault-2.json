@@ -1,0 +1,6 @@
+{
+  "name": "vault-2",
+  "private_ipv4": "10.0.0.6",
+  "public_ipv6": "",
+  "volumes": []
+}

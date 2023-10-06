@@ -141,12 +141,15 @@
 
     in
     {
-    devShells.${system}.default =
-             pkgs.mkShell {
-               buildInputs = [
-                 pkgs.awscli2
-               ];
-             };
+      devShells.${system}.default =
+        pkgs.mkShell {
+          buildInputs = [
+            pkgs.awscli2
+            (pkgs.writers.writeDash "ls-machines" ''
+              find ${toString ./machines} -type f -name '*.json' | xargs cat | ${pkgs.jq}/bin/jq
+            '')
+          ];
+        };
 
       apps = nixinate.nixinate.x86_64-linux self;
 
