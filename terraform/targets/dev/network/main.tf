@@ -33,6 +33,9 @@ resource "hcloud_server" "jump_host" {
     ipv4_enabled = true
     ipv6_enabled = true
   }
+  lifecycle {
+    ignore_changes = [network]
+  }
 }
 
 module "jump_host_file" {

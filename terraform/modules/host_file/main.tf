@@ -9,7 +9,7 @@ variable "volumes" {
 
 # create host_json_file
 resource "local_file" "host" {
-  filename = "${var.to_repo_path}/machines/${var.to_relative_path}/${var.host.name}.json"
+  filename = "${var.to_repo_path}/machines/${replace(var.to_relative_path, "/", "_")}_${var.host.name}.json"
   content = jsonencode({
     name         = var.host.name
     public_ipv6  = var.host.ipv6_address

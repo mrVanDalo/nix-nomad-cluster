@@ -97,11 +97,6 @@
                 hermetic = false;
               };
             }
-            {
-              imports = [
-                ./nixos/${name}/configuration.nix
-              ];
-            }
           ];
         };
 
@@ -158,7 +153,7 @@
                   echo "🌐 SSH Host: ${host}"
                   echo
                   echo "🧹 nixos-anywhere --flake .#${machine} root@${host}"
-                  echo "🧹 ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --flake .#${machine} root@${host}"
+                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --flake .#${machine} root@${host}
                   echo
                 '';
             in
@@ -175,6 +170,13 @@
             });
         };
 
+      jumphost = pkgs.lib.importJSON ./machines/dev_network_jumphost.json;
+
+      machines = map
+        (name: lib.importJSON ./machines/${name})
+        (builtins.attrNames (lib.filterAttrs
+          (name: type: type == "regular" && builtins.match ".*\\.json" name != null)
+          (builtins.readDir ./machines)));
 
     in
     {
@@ -182,26 +184,46 @@
         pkgs.mkShell {
           buildInputs = [
             pkgs.awscli2
-            (pkgs.writers.writeDashBin "sshuttle" ''
-              ${pkgs.sshuttle}/bin/sshuttle \
-                -r root@65.21.159.93 \
-                10.0.0.0/8
-            '')
           ];
         };
 
-      apps = (nixinate.nixinate.x86_64-linux self) // (generateNixOSAnywhere self);
+      apps = (nixinate.nixinate.x86_64-linux self) // (generateNixOSAnywhere self) //
+        {
+          vpn.default =
+            {
+              type = "app";
+              program = toString (pkgs.writers.writeDash "sshuttle" ''
+                ${pkgs.sshuttle}/bin/sshuttle \
+                  -r root@${jumphost.public_ipv4} \
+                  10.0.0.0/8
+              '');
+            };
+        }
+      ;
 
       nixosConfigurations =
         {
-          jumphost = nixosConfigurationSetup {
-            name = "jumphost";
-            host = "65.21.159.93";
+          jumphost_public = nixosConfigurationSetup {
+            name = jumphost.name;
+            host = jumphost.public_ipv4;
             modules = [
               ./nixos/jumphost/configuration.nix
             ];
           };
-        };
+        } // (builtins.listToAttrs
+          (map
+            ({ name, private_ipv4, ... }: {
+              name = name;
+              value = nixosConfigurationSetup {
+                name = name;
+                host = private_ipv4;
+                modules = [
+                  ./nixos/jumphost/configuration.nix
+                ];
+              };
+            })
+            machines)
+        );
     };
 }
 

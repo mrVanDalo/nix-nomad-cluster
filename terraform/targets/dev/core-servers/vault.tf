@@ -1,5 +1,5 @@
 locals {
-  vault_server_count = 3
+  vault_server_count = 1
 }
 resource "hcloud_server" "vault" {
   count       = local.vault_server_count
