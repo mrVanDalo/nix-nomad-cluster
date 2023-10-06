@@ -10,10 +10,19 @@ resource "hcloud_server" "vault" {
   network {
     network_id = var.main_network
   }
+  labels = {
+    role = "vault"
+  }
   public_net {
     ipv4_enabled = false
     ipv6_enabled = false
   }
+  user_data = <<EOH
+#cloud-config
+runcmd:
+  - ip route add default via 10.0.0.1
+  - echo nameserver 8.8.8.8 > /etc/resolv.conf
+EOH
   lifecycle {
     ignore_changes = [network]
   }

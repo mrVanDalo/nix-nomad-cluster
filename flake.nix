@@ -153,6 +153,8 @@
                   echo "🌐 SSH Host: ${host}"
                   echo
                   echo "🧹 nixos-anywhere --flake .#${machine} root@${host}"
+                  echo "> press Ctrl-C you changed your mind <"
+                  read answer
                   ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --flake .#${machine} root@${host}
                   echo
                 '';
@@ -209,20 +211,22 @@
             (filteredMachines ({ public_ipv4, ... }: public_ipv4 != ""));
         };
 
-      nixosConfigurations = (builtins.listToAttrs
-        (map
-          ({ name, id, public_ipv4, private_ipv4, ... }: {
+      nixosConfigurations = (mapListToAttr
+        ({ name, id, public_ipv4, private_ipv4, tags, ... }:
+          {
             name = id;
             value = nixosConfigurationSetup {
               name = name;
               host = if public_ipv4 != "" then public_ipv4 else private_ipv4;
-              modules = [
-                ./nixos/gateway/configuration.nix
-              ];
+              modules =
+                [
+                  #{ networking.hostName = name; }
+                  ./nixos/roles/${tags.role}
+                  ./nixos/components
+                ];
             };
           })
-          machines)
-      );
+        machines);
     };
 }
 

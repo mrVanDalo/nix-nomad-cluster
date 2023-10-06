@@ -11,10 +11,15 @@ resource "hcloud_server" "nix_cache" {
     ipv4_enabled = false
     ipv6_enabled = false
   }
-  # todo
-  # ip route add default via 10.0.0.1
-  # todo resolve conf
-  # user_data = ""
+  labels = {
+    role = "cache"
+  }
+  user_data = <<EOH
+#cloud-config
+runcmd:
+  - ip route add default via 10.0.0.1
+  - echo nameserver 8.8.8.8 > /etc/resolv.conf
+EOH
   lifecycle {
     ignore_changes = [network]
   }
