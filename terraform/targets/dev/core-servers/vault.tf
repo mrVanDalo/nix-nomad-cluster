@@ -6,6 +6,7 @@ resource "hcloud_server" "vault" {
   name        = "vault-${count.index}"
   image       = "debian-11"
   server_type = "cx41"
+  ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network
   }

@@ -13,6 +13,7 @@ resource "local_file" "host" {
   content = jsonencode({
     name         = var.host.name
     public_ipv6  = var.host.ipv6_address
+    public_ipv4  = var.host.ipv4_address
     private_ipv4 = [for item in var.host.network : item.ip][0]
     volumes = [for item in var.volumes :
       {

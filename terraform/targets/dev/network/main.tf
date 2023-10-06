@@ -30,7 +30,7 @@ resource "hcloud_server" "jump_host" {
     network_id = hcloud_network.network[index(local.networks, "eu-central")].id
   }
   public_net {
-    ipv4_enabled = false
+    ipv4_enabled = true
     ipv6_enabled = true
   }
 }

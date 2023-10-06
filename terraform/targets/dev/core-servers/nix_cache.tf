@@ -3,6 +3,7 @@ resource "hcloud_server" "nix_cache" {
   name        = "nix-cache"
   image       = "debian-11"
   server_type = "cx41"
+  ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network
   }

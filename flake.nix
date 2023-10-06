@@ -50,7 +50,6 @@
       pkgs = nixpkgs.legacyPackages.${system};
       inherit (nixpkgs) lib;
 
-
       meta = rec {
         system = "x86_64-linux";
         pkgs = import nixpkgs {
@@ -73,9 +72,9 @@
                 inherit system;
               };
             })
-            (import ./nixos/pkgs)
           ];
         };
+        specialArgs = { };
       };
 
       nixosConfigurationSetup =
@@ -98,7 +97,7 @@
             }
             {
               imports = [
-                ./nixos/machines/${name}/configuration.nix
+                ./nixos/${name}/configuration.nix
               ];
             }
           ];
@@ -145,21 +144,25 @@
         pkgs.mkShell {
           buildInputs = [
             pkgs.awscli2
-            (pkgs.writers.writeDash "ls-machines" ''
-              find ${toString ./machines} -type f -name '*.json' | xargs cat | ${pkgs.jq}/bin/jq
+            (pkgs.writers.writeDashBin "sshuttle" ''
+              ${pkgs.sshuttle}/bin/sshuttle \
+                -r root@65.21.159.93 \
+                10.0.0.0/8
             '')
           ];
         };
 
+      # nixos-anywhere
+      # nix run github:numtide/nixos-anywhere -- --flake .#jumphost root@<ipaddress>
       apps = nixinate.nixinate.x86_64-linux self;
 
       nixosConfigurations =
         {
-          sternchen = nixosConfigurationSetup {
-            name = "sternchen";
-            host = "sternchen.secret";
+          jumphost = nixosConfigurationSetup {
+            name = "jumphost";
+            host = "65.21.159.93";
             modules = [
-              nixos-hardware.nixosModules.lenovo-thinkpad-x220
+              ./nixos/jumphost/configuration.nix
             ];
           };
         };
