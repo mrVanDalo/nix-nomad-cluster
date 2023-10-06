@@ -11,6 +11,10 @@ resource "hcloud_server" "nix_cache" {
     ipv4_enabled = false
     ipv6_enabled = false
   }
+  # todo
+  # ip route add default via 10.0.0.1
+  # todo resolve conf
+  # user_data = ""
   lifecycle {
     ignore_changes = [network]
   }

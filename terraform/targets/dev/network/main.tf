@@ -21,26 +21,39 @@ resource "hcloud_network_subnet" "availability_network" {
   ip_range     = cidrsubnet(local.ip_range, 12, count.index)
 }
 
-resource "hcloud_server" "jump_host" {
-  name        = "jumphost"
+resource "hcloud_network_route" "internet-gateway" {
+  network_id  = hcloud_network.network[0].id
+  destination = "0.0.0.0/0"
+  # todo : make variable
+  gateway = "10.0.0.2"
+}
+
+resource "hcloud_server" "gateway" {
+  name        = "gateway"
   image       = "debian-11"
   server_type = "cx11"
   ssh_keys    = [var.main_key]
   network {
     network_id = hcloud_network.network[index(local.networks, "eu-central")].id
+    # todo : make variable
+    ip = "10.0.0.2"
   }
   public_net {
     ipv4_enabled = true
     ipv6_enabled = true
+  }
+  labels = {
+    environment = var.environment
+    role        = "gateway"
   }
   lifecycle {
     ignore_changes = [network]
   }
 }
 
-module "jump_host_file" {
+module "gateway_host_file" {
   source           = "../../../modules/host_file"
-  host             = hcloud_server.jump_host
+  host             = hcloud_server.gateway
   to_relative_path = local.path_relative_to_include
   to_repo_path     = local.get_path_to_repo_root
 }

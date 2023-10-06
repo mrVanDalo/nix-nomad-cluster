@@ -160,7 +160,7 @@
             final.writeScript "deploy-${machine}.sh" script;
         in
         {
-          nixos-anywhere = nixpkgs.lib.genAttrs validMachines (x:
+          override = nixpkgs.lib.genAttrs validMachines (x:
             {
               type = "app";
               program = toString (mkDeployScript {
@@ -170,13 +170,15 @@
             });
         };
 
-      jumphost = pkgs.lib.importJSON ./machines/dev_network_jumphost.json;
-
       machines = map
         (name: lib.importJSON ./machines/${name})
         (builtins.attrNames (lib.filterAttrs
           (name: type: type == "regular" && builtins.match ".*\\.json" name != null)
           (builtins.readDir ./machines)));
+
+      filteredMachines = f: builtins.filter f machines;
+
+      mapListToAttr = f: l: builtins.listToAttrs (builtins.map f l);
 
     in
     {
@@ -187,43 +189,40 @@
           ];
         };
 
-      apps = (nixinate.nixinate.x86_64-linux self) // (generateNixOSAnywhere self) //
+      apps =
+        (nixinate.nixinate.x86_64-linux self) //
+        (generateNixOSAnywhere self) //
         {
-          vpn.default =
-            {
-              type = "app";
-              program = toString (pkgs.writers.writeDash "sshuttle" ''
-                ${pkgs.sshuttle}/bin/sshuttle \
-                  -r root@${jumphost.public_ipv4} \
-                  10.0.0.0/8
-              '');
-            };
-        }
-      ;
-
-      nixosConfigurations =
-        {
-          jumphost_public = nixosConfigurationSetup {
-            name = jumphost.name;
-            host = jumphost.public_ipv4;
-            modules = [
-              ./nixos/jumphost/configuration.nix
-            ];
-          };
-        } // (builtins.listToAttrs
-          (map
-            ({ name, private_ipv4, ... }: {
-              name = name;
-              value = nixosConfigurationSetup {
-                name = name;
-                host = private_ipv4;
-                modules = [
-                  ./nixos/jumphost/configuration.nix
-                ];
-              };
+          sshuttle = mapListToAttr
+            ({ name, id, public_ipv4, ... }: {
+              name = id;
+              value =
+                {
+                  type = "app";
+                  program = toString (pkgs.writers.writeDash "sshuttle" ''
+                    ${pkgs.sshuttle}/bin/sshuttle \
+                      -r root@${public_ipv4} \
+                      10.0.0.0/8
+                  '');
+                };
             })
-            machines)
-        );
+            (filteredMachines ({ public_ipv4, ... }: public_ipv4 != ""));
+        };
+
+      nixosConfigurations = (builtins.listToAttrs
+        (map
+          ({ name, id, public_ipv4, private_ipv4, ... }: {
+            name = id;
+            value = nixosConfigurationSetup {
+              name = name;
+              host = if public_ipv4 != "" then public_ipv4 else private_ipv4;
+              modules = [
+                ./nixos/gateway/configuration.nix
+              ];
+            };
+          })
+          machines)
+      );
     };
 }
 

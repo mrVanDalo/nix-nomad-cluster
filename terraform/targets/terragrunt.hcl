@@ -36,6 +36,8 @@ locals {
   get_path_to_repo_root      = "${get_path_to_repo_root()}"
   get_path_from_repo_root    = "${get_path_from_repo_root()}"
 }
+
+variable "environment" {}
 EOF
 }
 
