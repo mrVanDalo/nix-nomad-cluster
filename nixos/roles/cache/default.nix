@@ -1,8 +1,6 @@
 { modulesPath, config, lib, pkgs, ... }:
 {
   imports = [
-    (modulesPath + "/installer/scan/not-detected.nix")
-    (modulesPath + "/profiles/qemu-guest.nix")
     ./disk-config.nix
   ];
 
@@ -13,12 +11,11 @@
     efiInstallAsRemovable = true;
   };
 
-  environment.systemPackages = [
-    pkgs.curl
-    pkgs.gitMinimal
-    pkgs.python3
-  ];
-
   system.stateVersion = "23.11";
+
+  # try:
+  # - disable networking.dhcpd and enable systemd network
+  # - raise metric parameter on networkin.defaultGateway.metric
+  # - disable dhcpd
 
 }

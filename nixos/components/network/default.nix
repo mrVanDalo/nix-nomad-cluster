@@ -12,6 +12,7 @@ with types;
   imports = [
     ./ssh.nix
     ./routing.nix
+    ./systemd.nix
   ];
 
   config = mkIf config.components.network.enable { };

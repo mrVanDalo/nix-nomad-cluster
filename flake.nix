@@ -152,10 +152,10 @@
                   echo "👤 SSH User: ${user}"
                   echo "🌐 SSH Host: ${host}"
                   echo
-                  echo "🧹 nixos-anywhere --flake .#${machine} root@${host}"
+                  echo "🧹 nixos-anywhere --build-on-remote --flake .#${machine} root@${host}"
                   echo "> press Ctrl-C you changed your mind <"
                   read answer
-                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --flake .#${machine} root@${host}
+                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --build-on-remote --flake .#${machine} root@${host}
                   echo
                 '';
             in
@@ -221,6 +221,12 @@
               modules =
                 [
                   #{ networking.hostName = name; }
+                  ({ modulesPath, ... }: {
+                    imports = [
+                      (modulesPath + "/installer/scan/not-detected.nix")
+                      (modulesPath + "/profiles/qemu-guest.nix")
+                    ];
+                  })
                   ./nixos/roles/${tags.role}
                   ./nixos/components
                 ];
