@@ -18,6 +18,7 @@ with types;
       pkgs.vim
       pkgs.htop
       pkgs.silver-searcher
+      pkgs.jq
     ];
 
     environment.extraInit = ''

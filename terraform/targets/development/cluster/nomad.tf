@@ -1,9 +1,9 @@
 locals {
-  vault_server_count = 1
+  nomad_server_count = 2
 }
-resource "hcloud_server" "vault" {
-  count       = local.vault_server_count
-  name        = "${local.environment_short}-vault-${count.index}"
+resource "hcloud_server" "nomad" {
+  count       = local.nomad_server_count
+  name        = "${local.environment_short}-nomad-${count.index}"
   image       = "debian-11"
   server_type = "cx11"
   ssh_keys    = [var.main_key]
@@ -11,7 +11,7 @@ resource "hcloud_server" "vault" {
     network_id = var.main_network
   }
   labels = {
-    role        = "vault"
+    role        = "consul"
     environment = var.environment
   }
   public_net {
@@ -29,10 +29,10 @@ EOH
   }
 }
 
-module "vault_host_file" {
-  count            = local.vault_server_count
+module "nomad_host_file" {
+  count            = local.nomad_server_count
   source           = "../../../modules/host_file"
-  host             = hcloud_server.vault[count.index]
+  host             = hcloud_server.nomad[count.index]
   to_relative_path = local.path_relative_to_include
   to_repo_path     = local.get_path_to_repo_root
   volumes          = []

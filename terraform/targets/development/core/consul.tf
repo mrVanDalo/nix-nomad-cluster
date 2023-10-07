@@ -1,18 +1,22 @@
-
-resource "hcloud_server" "nix_cache" {
-  name        = "${local.environment_short}-nix-cache"
+locals {
+  consul_server_count = 1
+}
+resource "hcloud_server" "consul" {
+  count       = local.consul_server_count
+  name        = "${local.environment_short}-consul-${count.index}"
   image       = "debian-11"
   server_type = "cx11"
   ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network
   }
+  labels = {
+    role        = "consul"
+    environment = var.environment
+  }
   public_net {
     ipv4_enabled = false
     ipv6_enabled = false
-  }
-  labels = {
-    role = "cache"
   }
   user_data = <<EOH
 #cloud-config
@@ -25,18 +29,11 @@ EOH
   }
 }
 
-resource "hcloud_volume" "nix_cache" {
-  name      = "nix_cache"
-  size      = 50
-  server_id = hcloud_server.nix_cache.id
-  automount = true
-  format    = "ext4"
-}
-
-module "nix_cache_host_file" {
+module "consul_host_file" {
+  count            = local.consul_server_count
   source           = "../../../modules/host_file"
-  host             = hcloud_server.nix_cache
+  host             = hcloud_server.consul[count.index]
   to_relative_path = local.path_relative_to_include
   to_repo_path     = local.get_path_to_repo_root
-  volumes          = [hcloud_volume.nix_cache]
+  volumes          = []
 }

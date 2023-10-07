@@ -76,7 +76,8 @@
             })
           ];
         };
-        specialArgs = { };
+
+        specialArgs = { inherit machines; };
       };
 
       nixosConfigurationSetup =
@@ -86,7 +87,7 @@
         }:
 
         lib.nixosSystem {
-          inherit (meta) system specialArgs pkgs;
+          inherit (meta) system pkgs specialArgs;
           modules = modules ++ defaultModules ++ [
             {
               _module.args.nixinate = {

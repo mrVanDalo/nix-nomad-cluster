@@ -48,8 +48,8 @@ resource "hcloud_server" "gateway" {
     ipv6_enabled = true
   }
   labels = {
-    environment = var.environment
     role        = "gateway"
+    environment = var.environment
   }
   lifecycle {
     ignore_changes = [network]

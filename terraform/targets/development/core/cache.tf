@@ -1,22 +1,19 @@
-locals {
-  vault_server_count = 1
-}
-resource "hcloud_server" "vault" {
-  count       = local.vault_server_count
-  name        = "${local.environment_short}-vault-${count.index}"
+
+resource "hcloud_server" "cache" {
+  name        = "${local.environment_short}-cache"
   image       = "debian-11"
   server_type = "cx11"
   ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network
   }
-  labels = {
-    role        = "vault"
-    environment = var.environment
-  }
   public_net {
     ipv4_enabled = false
     ipv6_enabled = false
+  }
+  labels = {
+    role        = "cache"
+    environment = var.environment
   }
   user_data = <<EOH
 #cloud-config
@@ -29,11 +26,18 @@ EOH
   }
 }
 
-module "vault_host_file" {
-  count            = local.vault_server_count
+resource "hcloud_volume" "cache" {
+  name      = hcloud_server.cache.name
+  size      = 200
+  server_id = hcloud_server.cache.id
+  automount = true
+  format    = "ext4"
+}
+
+module "cache_host_file" {
   source           = "../../../modules/host_file"
-  host             = hcloud_server.vault[count.index]
+  host             = hcloud_server.cache
   to_relative_path = local.path_relative_to_include
   to_repo_path     = local.get_path_to_repo_root
-  volumes          = []
+  volumes          = [hcloud_volume.cache]
 }

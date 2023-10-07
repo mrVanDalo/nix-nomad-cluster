@@ -1,4 +1,4 @@
-{ modulesPath, config, lib, pkgs, ... }:
+{ modulesPath, config, lib, pkgs, machines, ... }:
 {
   imports = [
     ./disk-config.nix
@@ -12,6 +12,8 @@
     enable = true;
     internalIPs = [ "10.0.0.0/24" ];
   };
+
+  environment.etc."machines".text = builtins.toJSON machines;
 
   system.stateVersion = "23.11";
 }

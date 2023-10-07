@@ -32,7 +32,6 @@ generate "meta" {
 locals {
   path_relative_to_include   = "${path_relative_to_include()}"
   path_relative_from_include = "${path_relative_from_include()}"
-  get_repo_root              = "${get_repo_root()}"
   get_path_to_repo_root      = "${get_path_to_repo_root()}"
   get_path_from_repo_root    = "${get_path_from_repo_root()}"
 
