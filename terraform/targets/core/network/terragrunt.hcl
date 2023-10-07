@@ -17,5 +17,5 @@ EOF
 
 inputs = {
   main_key    = dependency.keys.outputs.main_key
-  environment = "development"
+  environment = "core"
 }

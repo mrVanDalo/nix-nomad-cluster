@@ -9,8 +9,6 @@ with types;
     };
   };
 
-  #imports = [ ];
-
   config = mkIf config.components.tools.enable {
 
     environment.systemPackages = [

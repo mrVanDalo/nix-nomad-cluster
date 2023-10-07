@@ -6,13 +6,8 @@
 
   networking.hostName = lib.mkDefault "gateway";
 
-  boot.loader.grub = {
-    efiSupport = true;
-    efiInstallAsRemovable = true;
-  };
-
   # gateway
-  components.network.routing.enable = false;
+  components.network.hetzner.enable = false;
   networking.nat = {
     enable = true;
     internalIPs = [ "10.0.0.0/24" ];

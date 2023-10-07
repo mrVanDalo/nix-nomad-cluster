@@ -3,9 +3,9 @@ locals {
 }
 resource "hcloud_server" "vault" {
   count       = local.vault_server_count
-  name        = "vault-${count.index}"
+  name        = "${var.environment}-core-vault-${count.index}"
   image       = "debian-11"
-  server_type = "cx41"
+  server_type = "cx11"
   ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network

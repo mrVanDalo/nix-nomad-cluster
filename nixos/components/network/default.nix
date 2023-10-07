@@ -10,9 +10,8 @@ with types;
   };
 
   imports = [
+    ./hetzner.nix
     ./ssh.nix
-    ./routing.nix
-    ./systemd.nix
   ];
 
   config = mkIf config.components.network.enable { };

@@ -34,6 +34,23 @@
         };
       };
     };
+    disk.disk2 = {
+      device = lib.mkDefault "/dev/sdb";
+      type = "disk";
+      content = {
+        type = "gpt";
+        partitions = {
+          store = {
+            name = "root";
+            size = "100%";
+            content = {
+              type = "lvm_pv";
+              vg = "store";
+            };
+          };
+        };
+      };
+    };
     lvm_vg = {
       pool = {
         type = "lvm_vg";
@@ -44,6 +61,22 @@
               type = "filesystem";
               format = "ext4";
               mountpoint = "/";
+              mountOptions = [
+                "defaults"
+              ];
+            };
+          };
+        };
+      };
+      store = {
+        type = "lvm_vg";
+        lvs = {
+          root = {
+            size = "100%FREE";
+            content = {
+              type = "filesystem";
+              format = "ext4";
+              mountpoint = "/nix/store";
               mountOptions = [
                 "defaults"
               ];

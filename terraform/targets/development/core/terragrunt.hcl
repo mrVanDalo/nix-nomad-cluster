@@ -3,10 +3,10 @@ include "root" {
 }
 
 dependency "keys" {
-  config_path = "../keys"
+  config_path = "../../core/keys"
 }
 dependency "network" {
-  config_path = "../network"
+  config_path = "../../core/network"
 }
 generate "dependencies" {
   path      = "_generated_dependency_inputs.tf"

@@ -3,9 +3,12 @@ locals {
   networks = ["eu-central"]
   ip_range = "10.0.0.0/8"
 }
+
+# create network
+# --------------
 resource "hcloud_network" "network" {
   count    = length(local.networks)
-  name     = "private_network_${count.index}"
+  name     = "${local.environment_short}_network_${substr(local.networks[count.index], 0, 4)}"
   ip_range = cidrsubnet(local.ip_range, 12, count.index)
 }
 
@@ -21,6 +24,8 @@ resource "hcloud_network_subnet" "availability_network" {
   ip_range     = cidrsubnet(local.ip_range, 12, count.index)
 }
 
+# create gateway
+# --------------
 resource "hcloud_network_route" "internet-gateway" {
   network_id  = hcloud_network.network[0].id
   destination = "0.0.0.0/0"
@@ -29,7 +34,7 @@ resource "hcloud_network_route" "internet-gateway" {
 }
 
 resource "hcloud_server" "gateway" {
-  name        = "gateway"
+  name        = "${local.environment_short}-net-gateway"
   image       = "debian-11"
   server_type = "cx11"
   ssh_keys    = [var.main_key]

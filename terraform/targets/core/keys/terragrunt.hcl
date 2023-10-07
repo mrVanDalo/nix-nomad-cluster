@@ -3,5 +3,5 @@ include "root" {
 }
 
 inputs = {
-  environment = "development"
+  environment = "core"
 }

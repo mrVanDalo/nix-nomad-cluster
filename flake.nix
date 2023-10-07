@@ -220,7 +220,9 @@
               host = if public_ipv4 != "" then public_ipv4 else private_ipv4;
               modules =
                 [
-                  #{ networking.hostName = name; }
+                  {
+                    networking.hostName = name;
+                  }
                   ({ modulesPath, ... }: {
                     imports = [
                       (modulesPath + "/installer/scan/not-detected.nix")

@@ -35,6 +35,8 @@ locals {
   get_repo_root              = "${get_repo_root()}"
   get_path_to_repo_root      = "${get_path_to_repo_root()}"
   get_path_from_repo_root    = "${get_path_from_repo_root()}"
+
+  environment_short = substr(var.environment,0,3)
 }
 
 variable "environment" {}
