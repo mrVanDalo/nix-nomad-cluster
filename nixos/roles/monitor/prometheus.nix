@@ -1,5 +1,7 @@
 { config, pkgs, lib, machines, machine, ... }: {
 
+  networking.firewall.allowedTCPPorts = [ 9090 ];
+
   services.prometheus = {
     checkConfig = "syntax-only";
     enable = true;
@@ -37,7 +39,7 @@
         static_configs = [
           {
             targets = map (ip: "${ip}:19999")
-              (builtins.flatten (map ({ private_ipv4, ... }: private_ipv4) machines));
+              (lib.flatten (map ({ private_ipv4, ... }: private_ipv4) machines));
             labels = {
               service = "netdata";
               environment = machine.environment;
@@ -52,7 +54,7 @@
         static_configs = [
           {
             targets = map (ip: "${ip}:9273")
-              (builtins.flatten (map ({ private_ipv4, ... }: private_ipv4) machines));
+              (lib.flatten (map ({ private_ipv4, ... }: private_ipv4) machines));
 
             labels = {
               service = "telegraf";

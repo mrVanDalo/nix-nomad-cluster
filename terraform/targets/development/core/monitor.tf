@@ -27,7 +27,7 @@ EOH
 
 module "monitor_host_file" {
   source           = "../../../modules/host_file"
-  host             = hcloud_server.monitor[count.index]
+  host             = hcloud_server.monitor
   to_relative_path = local.path_relative_to_include
   to_repo_path     = local.get_path_to_repo_root
   volumes          = []

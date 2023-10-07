@@ -22,10 +22,8 @@ with types;
     ];
 
     environment.extraInit = ''
-      # use vi shortcuts
-      # ----------------
+      export EDITOR=vim
       set -o vi
-      EDITOR=vim
     '';
 
   };

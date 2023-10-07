@@ -2,6 +2,8 @@
 {
   imports = [
     ./disk-config.nix
+
+    ./cache.nix
   ];
 
   networking.hostName = lib.mkDefault "cache";

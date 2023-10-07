@@ -126,7 +126,20 @@
             };
           })
 
-        { nix.settings.substituters = [ "https://cache.nixos.org/" ]; }
+        {
+          nix.settings = {
+            substituters = [
+              # todo : hardcoded => make dynamic
+              "http://10.0.0.4:5000/"
+              # default
+              "https://cache.nixos.org/"
+            ];
+            trusted-public-keys = [
+              # fixme: hardcoded and unsecure!
+              "nomad-cluster-cache:9N2kLCc7dUndvNy7ZgO13R19ByA9JmI6dYhE8MzwIOw="
+            ];
+          };
+        }
 
         {
           boot.tmp.useTmpfs = lib.mkDefault true;
@@ -175,11 +188,8 @@
             });
         };
 
-      machines = map
-        (name: lib.importJSON ./machines/${name})
-        (builtins.attrNames (lib.filterAttrs
-          (name: type: type == "regular" && builtins.match ".*\\.json" name != null)
-          (builtins.readDir ./machines)));
+      allMachines = import ./machines lib;
+      machines = allMachines.machines;
 
       filteredMachines = f: builtins.filter f machines;
 

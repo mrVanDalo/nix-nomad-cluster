@@ -5,7 +5,8 @@
 
     ./loki.nix
     ./prometheus.nix
-    ./thanos.nix
+    #./thanos.nix
+    ./grafana.nix
   ];
 
   networking.hostName = lib.mkDefault "monitor";

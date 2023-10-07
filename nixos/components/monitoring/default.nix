@@ -23,6 +23,7 @@ with types;
           cpu = { };
           diskio = { };
           processes = { };
+          system = { };
           systemd_units = { };
         };
       };
@@ -39,7 +40,7 @@ with types;
     };
 
     # open ports for to collect metrics
-    networking.firewall.allowTCPPorts = [ 19999 9273 ];
+    networking.firewall.allowedTCPPorts = [ 19999 9273 ];
 
     # todo : push logs to loki
   };
