@@ -1,9 +1,5 @@
-locals {
-  nomad_server_count = 2
-}
-resource "hcloud_server" "nomad" {
-  count       = local.nomad_server_count
-  name        = "${local.environment_short}-nomad-${count.index}"
+resource "hcloud_server" "monitor" {
+  name        = "${local.environment_short}-monitor"
   image       = "debian-11"
   server_type = "cx11"
   ssh_keys    = [var.main_key]
@@ -11,7 +7,7 @@ resource "hcloud_server" "nomad" {
     network_id = var.main_network
   }
   labels = {
-    role        = "consul"
+    role        = "monitor"
     environment = var.environment
   }
   public_net {
@@ -29,10 +25,9 @@ EOH
   }
 }
 
-module "nomad_host_file" {
-  count            = local.nomad_server_count
+module "monitor_host_file" {
   source           = "../../../modules/host_file"
-  host             = hcloud_server.nomad[count.index]
+  host             = hcloud_server.monitor[count.index]
   to_relative_path = local.path_relative_to_include
   to_repo_path     = local.get_path_to_repo_root
   volumes          = []

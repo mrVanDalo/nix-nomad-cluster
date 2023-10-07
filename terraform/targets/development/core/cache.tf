@@ -40,4 +40,5 @@ module "cache_host_file" {
   to_relative_path = local.path_relative_to_include
   to_repo_path     = local.get_path_to_repo_root
   volumes          = [hcloud_volume.cache]
+  default_gateway  = "10.0.0.1"
 }

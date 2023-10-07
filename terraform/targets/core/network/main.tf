@@ -61,4 +61,5 @@ module "gateway_host_file" {
   host             = hcloud_server.gateway
   to_relative_path = local.path_relative_to_include
   to_repo_path     = local.get_path_to_repo_root
+  default_gateway  = "10.0.0.1"
 }

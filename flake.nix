@@ -84,10 +84,12 @@
         { name
         , host ? "${name}.private"
         , modules
+        , specialArgs ? { }
         }:
 
         lib.nixosSystem {
-          inherit (meta) system pkgs specialArgs;
+          inherit (meta) system pkgs;
+          specialArgs = meta.specialArgs // specialArgs;
           modules = modules ++ defaultModules ++ [
             {
               _module.args.nixinate = {
@@ -213,12 +215,13 @@
         };
 
       nixosConfigurations = (mapListToAttr
-        ({ name, id, public_ipv4, private_ipv4, tags, ... }:
+        (machine@{ name, id, public_ipv4, private_ipv4, tags, ... }:
           {
             name = id;
             value = nixosConfigurationSetup {
               name = name;
               host = if public_ipv4 != "" then public_ipv4 else private_ipv4;
+              specialArgs = { inherit machine; };
               modules =
                 [
                   {

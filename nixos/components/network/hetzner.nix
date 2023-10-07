@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, machine, ... }:
 with lib;
 with types;
 {
@@ -18,7 +18,8 @@ with types;
     ];
 
     # todo: move this to `components.hetzner.network`
-    networking.defaultGateway = "10.0.0.1";
+    #networking.defaultGateway = "10.0.0.1";
+    #networking.defaultGateway = machine.default_gateway;
 
     systemd.network.enable = true;
     systemd.network.networks."10-private-hetzner" = {
@@ -26,7 +27,7 @@ with types;
       networkConfig.DHCP = "ipv4";
       routes = [
         # create default routes for IPv4
-        { routeConfig.Gateway = "10.0.0.1"; }
+        { routeConfig.Gateway = machine.default_gateway; }
       ];
       # make the routes on this interface a dependency for network-online.target
       linkConfig.RequiredForOnline = "routable";
