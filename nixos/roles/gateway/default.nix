@@ -7,7 +7,5 @@
 
   networking.hostName = lib.mkDefault "gateway";
 
-  environment.etc."machines".text = builtins.toJSON machines;
-
   system.stateVersion = "23.11";
 }

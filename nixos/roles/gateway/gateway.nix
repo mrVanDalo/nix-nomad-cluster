@@ -1,3 +1,4 @@
+{ lib, ... }:
 {
   # gateway
   components.network.hetzner.enable = false;
@@ -8,4 +9,9 @@
   };
 
   services.telegraf.extraConfig.inputs.netstat = { };
+
+
+  # make sure fireall is working
+  networking.firewall.enable = lib.mkForce false;
+
 }

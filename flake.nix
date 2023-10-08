@@ -228,7 +228,7 @@
               toString (pkgs.writers.writeBash "gummy-all" ''
                 export PATH=${pkgs.gum}/bin:${pkgs.findutils}/bin:$PATH
                 machine=$( cat ${machinesList} | gum filter )
-                job=$( gum choose nixniate init )
+                job=$( gum choose nixinate init )
                 if [[ $job == "init" ]]
                 then
                     gum confirm "Really want to Re-Initalize (format) $machine?" || exit 0

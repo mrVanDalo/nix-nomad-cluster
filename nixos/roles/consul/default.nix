@@ -2,6 +2,8 @@
 {
   imports = [
     ./disk-config.nix
+
+    ./consul.nix
   ];
 
   networking.hostName = lib.mkDefault "consul";
