@@ -21,6 +21,7 @@ with types;
         # https://github.com/influxdata/telegraf/tree/master/plugins/inputs < all them plugins
         inputs = {
           cpu = { };
+          disk = { };
           diskio = { };
           processes = { };
           system = { };

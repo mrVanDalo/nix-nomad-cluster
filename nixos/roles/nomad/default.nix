@@ -2,6 +2,8 @@
 {
   imports = [
     ./disk-config.nix
+
+    ./nomad.nix
   ];
 
   networking.hostName = lib.mkDefault "nomad";

@@ -1,5 +1,5 @@
 locals {
-  nomad_server_count = 2
+  nomad_server_count = 3
 }
 resource "hcloud_server" "nomad" {
   count       = local.nomad_server_count
@@ -11,7 +11,7 @@ resource "hcloud_server" "nomad" {
     network_id = var.main_network
   }
   labels = {
-    role        = "consul"
+    role        = "nomad"
     environment = var.environment
   }
   public_net {

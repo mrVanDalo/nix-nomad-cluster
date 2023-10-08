@@ -12,15 +12,8 @@ with types;
 
   config = mkIf config.components.network.hetzner.enable {
 
-    networking.nameservers = [
-      "8.8.8.8"
-      "1.1.1.1"
-    ];
 
     # todo: move this to `components.hetzner.network`
-    #networking.defaultGateway = "10.0.0.1";
-    #networking.defaultGateway = machine.default_gateway;
-
     systemd.network.enable = true;
     systemd.network.networks."10-private-hetzner" = {
       matchConfig.Name = "*";
@@ -32,7 +25,11 @@ with types;
       # make the routes on this interface a dependency for network-online.target
       linkConfig.RequiredForOnline = "routable";
     };
-
+    # todo : find better version of this
+    networking.nameservers = [
+      "8.8.8.8"
+      "1.1.1.1"
+    ];
 
     # todo: move this to `components.hetzner.boot`
     boot.loader.grub = {

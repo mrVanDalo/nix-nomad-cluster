@@ -76,7 +76,6 @@
             })
           ];
         };
-
         specialArgs = { inherit machines; };
       };
 
@@ -130,7 +129,7 @@
           nix.settings = {
             substituters = [
               # todo : hardcoded => make dynamic
-              "http://10.0.0.4:5000/"
+              # "http://10.0.0.3:5000/"
               # default
               "https://cache.nixos.org/"
             ];
@@ -169,8 +168,8 @@
                   echo "🌐 SSH Host: ${host}"
                   echo
                   echo "🧹 nixos-anywhere --build-on-remote --flake .#${machine} root@${host}"
-                  echo "> press Ctrl-C you changed your mind <"
-                  read answer
+                  #echo "> press Ctrl-C you changed your mind <"
+                  #read answer
                   ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --build-on-remote --flake .#${machine} root@${host}
                   echo
                 '';
@@ -178,7 +177,7 @@
             final.writeScript "deploy-${machine}.sh" script;
         in
         {
-          override = nixpkgs.lib.genAttrs validMachines (x:
+          init = nixpkgs.lib.genAttrs validMachines (x:
             {
               type = "app";
               program = toString (mkDeployScript {
@@ -224,8 +223,50 @@
             (filteredMachines ({ public_ipv4, ... }: public_ipv4 != ""));
         };
 
+      colmena = {
+        meta = {
+          nixpkgs = meta.pkgs;
+          specialArgs = meta.specialArgs;
+        };
+      } // {
+        meta.nodeSpecialArgs =
+          (mapListToAttr (
+            (machine@{ id, ... }:
+              {
+                name = id;
+                value = { inherit machine; };
+              }
+            )
+          ));
+      } // (mapListToAttr
+        (machine@{ name, id, public_ipv4, private_ipv4, tags, role, environment, ... }:
+          {
+            name = id;
+            value = {
+              imports = [
+                {
+                  deployment.targetHost = if public_ipv4 != "" then public_ipv4 else private_ipv4;
+                  deployment.tags = "${role},${environment}";
+                  deployment.buildOnTarget = true;
+                }
+                {
+                  networking.hostName = name;
+                }
+                ({ modulesPath, ... }: {
+                  imports = [
+                    (modulesPath + "/installer/scan/not-detected.nix")
+                    (modulesPath + "/profiles/qemu-guest.nix")
+                  ];
+                })
+                ./nixos/roles/${tags.role}
+                ./nixos/components
+              ];
+            };
+          })
+        machines);
+
       nixosConfigurations = (mapListToAttr
-        (machine@{ name, id, public_ipv4, private_ipv4, tags, ... }:
+        (machine@{ name, id, public_ipv4, private_ipv4, role, ... }:
           {
             name = id;
             value = nixosConfigurationSetup {
@@ -243,7 +284,7 @@
                       (modulesPath + "/profiles/qemu-guest.nix")
                     ];
                   })
-                  ./nixos/roles/${tags.role}
+                  ./nixos/roles/${role}
                   ./nixos/components
                 ];
             };

@@ -1,18 +1,18 @@
-# Overview
+## Buzzwords
 
 - Hetzner
+  - Other provider possible, just create them in terraform folder
 - NixOS store
 - Private network
 - Nomad
 - Vault
 - Consul
+- monitoring
+  - loki
+  - prometheus
+  - thanos
 
-# Terraform
-
-- create instances
-- create flake.nix config for instances.
-
-# How to set up whole infra
+## How to set up whole infra
 
 ```shell
 cd terraform/targets/dev/core
@@ -29,3 +29,10 @@ nix flake show
 ```shell
 nix run .#apps.override.dev_network_gateway
 ```
+
+# Todos
+
+- find a nice way to run init in parallel
+  - something like `parallel screen -md nix run .#apps.init.{1} ::: development_....`
+  - make sure new ssh keys properly handled
+- make cache dynamic => it takes forever if the wrong cache is used.
