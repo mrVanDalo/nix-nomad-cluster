@@ -203,25 +203,59 @@
           ];
         };
 
-      apps =
-        (nixinate.nixinate.x86_64-linux self) //
-        (generateNixOSAnywhere self) //
-        {
-          sshuttle = mapListToAttr
-            ({ name, id, public_ipv4, ... }: {
-              name = id;
-              value =
-                {
-                  type = "app";
-                  program = toString (pkgs.writers.writeDash "sshuttle" ''
-                    ${pkgs.sshuttle}/bin/sshuttle \
-                      -r root@${public_ipv4} \
-                      10.0.0.0/8
-                  '');
-                };
-            })
-            (filteredMachines ({ public_ipv4, ... }: public_ipv4 != ""));
+      apps = {
+        ${system} = {
+
+          sshuttle = {
+            type = "app";
+            program =
+              let
+                machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) allMachines.jumphosts));
+              in
+              toString (pkgs.writers.writeBash "gummy-all" ''
+                export PATH=${pkgs.gum}/bin:${pkgs.findutils}/bin:$PATH
+                machine=$( cat ${machinesList} | gum filter )
+                job=sshuttle
+                nix run .#apps.$job.$machine
+              '');
+          };
+          default = {
+            type = "app";
+            program =
+              let
+                machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) machines));
+              in
+              toString (pkgs.writers.writeBash "gummy-all" ''
+                export PATH=${pkgs.gum}/bin:${pkgs.findutils}/bin:$PATH
+                machine=$( cat ${machinesList} | gum filter )
+                job=$( gum choose nixniate init )
+                if [[ $job == "init" ]]
+                then
+                    gum confirm "Really want to Re-Initalize (format) $machine?" || exit 0
+                fi
+                nix run .#apps.$job.$machine
+              '');
+          };
         };
+      } //
+      (nixinate.nixinate.x86_64-linux self) //
+      (generateNixOSAnywhere self) //
+      {
+        sshuttle = mapListToAttr
+          ({ name, id, public_ipv4, ... }: {
+            name = id;
+            value =
+              {
+                type = "app";
+                program = toString (pkgs.writers.writeDash "sshuttle" ''
+                  ${pkgs.sshuttle}/bin/sshuttle \
+                    -r root@${public_ipv4} \
+                    10.0.0.0/8
+                '');
+              };
+          })
+          (filteredMachines ({ public_ipv4, ... }: public_ipv4 != ""));
+      };
 
       colmena = {
         meta = {
