@@ -4,6 +4,7 @@
     ./disk-config.nix
 
     ./cache.nix
+    ./proxy.nix
   ];
 
   networking.hostName = lib.mkDefault "cache";

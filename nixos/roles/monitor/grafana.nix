@@ -5,6 +5,7 @@
     config.services.grafana.settings.server.http_port
   ];
 
+  # Open Grafana in browser as default
   services.nginx = {
     enable = true;
     virtualHosts = {
@@ -21,6 +22,10 @@
   services.grafana = {
     enable = true;
     settings = {
+
+      # darktheme is for trolls :D
+      users.default_theme = "light";
+
       server = {
         # Listening Address
         http_addr = "0.0.0.0";
@@ -30,25 +35,28 @@
         #domain = "your.domain";
         #root_url = "https://your.domain/grafana/"; # Not needed if it is `https://your.domain/`
       };
+
     };
-    provision.enable = true;
-    provision.datasources.settings = {
-      apiVersion = 1;
-      datasources = [{
-        name = "Prometheus";
-        type = "prometheus";
-        uid = "P1";
-        url = "http://localhost:9090";
-      }];
-    };
-    #provision.dashboards.path = ./grafana-dashboards;
-    provision.dashboards.settings = {
-      apiVersion = 1;
-      providers = [{
-        name = "default";
-        #options.path = "/var/lib/grafana/dashboards";
-        options.path = ./grafana-dashboards;
-      }];
+
+
+    provision = {
+      enable = true;
+      datasources.settings = {
+        apiVersion = 1;
+        datasources = [{
+          name = "Prometheus";
+          type = "prometheus";
+          uid = "P1";
+          url = "http://localhost:9090";
+        }];
+      };
+      dashboards.settings = {
+        apiVersion = 1;
+        providers = [{
+          name = "default";
+          options.path = ./grafana-dashboards;
+        }];
+      };
     };
   };
 }
