@@ -76,8 +76,8 @@
             content = {
               type = "filesystem";
               format = "ext4";
-              #mountpoint = "/data";
-              mountpoint = "/nix/store";
+              mountpoint = "/data";
+              #mountpoint = "/nix/store";
               mountOptions = [
                 "defaults"
               ];
