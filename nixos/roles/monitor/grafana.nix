@@ -1,9 +1,22 @@
-{ config, ... }:
+{ machine, config, ... }:
 {
 
   networking.firewall.allowedTCPPorts = [
     config.services.grafana.settings.server.http_port
   ];
+
+  services.nginx = {
+    enable = true;
+    virtualHosts = {
+      ${machine.name} = {
+        locations."/" = {
+          proxyWebsockets = true;
+          recommendedProxySettings = true;
+          proxyPass = "http://localhost:3000";
+        };
+      };
+    };
+  };
 
   services.grafana = {
     enable = true;
@@ -24,7 +37,17 @@
       datasources = [{
         name = "Prometheus";
         type = "prometheus";
+        uid = "P1";
         url = "http://localhost:9090";
+      }];
+    };
+    #provision.dashboards.path = ./grafana-dashboards;
+    provision.dashboards.settings = {
+      apiVersion = 1;
+      providers = [{
+        name = "default";
+        #options.path = "/var/lib/grafana/dashboards";
+        options.path = ./grafana-dashboards;
       }];
     };
   };
