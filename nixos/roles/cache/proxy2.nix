@@ -39,8 +39,9 @@ in
         #   nginx: [emerg] host not found in upstream "upstream.example.com"
         # when the upstream host is not reachable for a short time when
         # nginx is started.
-        resolver ${resolver};
-        set $upstream_endpoint http://cache.nixos.org;
+
+        # resolver ${resolver};
+        set $upstream_endpoint https://cache.nixos.org;
       '';
 
       locations."@fallback" = {
