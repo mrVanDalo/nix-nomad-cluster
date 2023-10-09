@@ -13,7 +13,7 @@
           302     "public";
           default "no-cache";
         }
-        access_log /data/log/nginx/access.log;
+        access_log /var/log/nginx/access.log;
       '';
 
       virtualHosts.${machine.id} = {
