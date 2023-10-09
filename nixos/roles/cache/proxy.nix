@@ -42,12 +42,12 @@
     };
   };
 
-  systemd.tmpfiles.rules = [
-    "d /data/nginx/nix-cache-info/temp 0755 nginx nginx"
-    "d /data/nginx/nix-cache-info/store 0755 nginx nginx"
-    "d /data/nginx/nar/temp 0755 nginx nginx"
-    "d /data/nginx/nar/store 0755 nginx nginx"
-  ];
+  systemd.services.nginx.preStart = ''
+    mkdir -p /data/nginx/nix-cache-info/temp
+    mkdir -p /data/nginx/nix-cache-info/store
+    mkdir -p /data/nginx/nar/temp
+    mkdir -p /data/nginx/nar/store
+  '';
 
   services.permown."/data" = {
     owner = "nginx";
