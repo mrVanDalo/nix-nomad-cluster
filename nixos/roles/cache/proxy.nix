@@ -11,7 +11,6 @@
           proxyPass = "http://localhost:3000";
         };
 
-
         locations = {
 
           "~ ^/nix-cache-info" = {
@@ -42,6 +41,13 @@
       };
     };
   };
+
+  systemd.tmpfiles.rules = [
+    "d /data/nginx/nix-cache-info/temp 0755 nginx nginx"
+    "d /data/nginx/nix-cache-info/store 0755 nginx nginx"
+    "d /data/nginx/nar/temp 0755 nginx nginx"
+    "d /data/nginx/nar/store 0755 nginx nginx"
+  ];
 
   services.permown."/data" = {
     owner = "nginx";
