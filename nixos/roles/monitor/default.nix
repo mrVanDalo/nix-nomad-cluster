@@ -5,7 +5,7 @@
 
     ./loki.nix
     ./prometheus.nix
-    #./thanos.nix
+    ./thanos.nix
     ./grafana.nix
   ];
 

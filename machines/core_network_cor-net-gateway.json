@@ -1,1 +1,0 @@
-{"default_gateway":"10.0.0.1","environment":"core","id":"core_network_cor-net-gateway","name":"cor-net-gateway","private_ipv4":"10.0.0.2","public_ipv4":"65.21.159.93","public_ipv6":"2a01:4f9:c010:bf8c::1","role":"gateway","tags":{"environment":"core","role":"gateway"},"volumes":[]}

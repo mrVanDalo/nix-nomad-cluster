@@ -44,10 +44,10 @@
       datasources.settings = {
         apiVersion = 1;
         datasources = [{
-          name = "Prometheus";
+          name = "Thanos";
           type = "prometheus";
           uid = "P1";
-          url = "http://localhost:9090";
+          url = "http://localhost:10912";
         }];
       };
       dashboards.settings = {
