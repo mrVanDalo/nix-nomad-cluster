@@ -9,7 +9,9 @@ let
 in
 {
   inherit machines;
+
   jumphosts = builtins.filter ({ public_ipv4, ... }: public_ipv4 != "") machines;
+  cachehosts = builtins.filter ({ role, ... }: role == "cache") machines;
 
   # machines by environment
 

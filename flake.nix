@@ -85,7 +85,6 @@
         , modules
         , specialArgs ? { }
         }:
-
         lib.nixosSystem {
           inherit (meta) system pkgs;
           specialArgs = meta.specialArgs // specialArgs;
@@ -102,12 +101,14 @@
           ];
         };
 
+
+
       defaultModules = [
 
         {
-          # todo : find out what this is?
-          # make flake inputs accessiable in NixOS
           _module.args.self = self;
+
+          # make flake inputs accessiable in NixOS
           _module.args.inputs = self.inputs;
         }
 
@@ -124,21 +125,6 @@
               '';
             };
           })
-
-        {
-          nix.settings = {
-            substituters = [
-              # todo : hardcoded => make dynamic
-              # "http://10.0.0.3:5000/"
-              # default
-              "https://cache.nixos.org/"
-            ];
-            trusted-public-keys = [
-              # fixme: hardcoded and unsecure!
-              "nomad-cluster-cache:9N2kLCc7dUndvNy7ZgO13R19ByA9JmI6dYhE8MzwIOw="
-            ];
-          };
-        }
 
         {
           boot.tmp.useTmpfs = lib.mkDefault true;
@@ -160,6 +146,8 @@
               n = flake.nixosConfigurations.${machine}._module.args.nixinate;
               user = n.sshUser or "root";
               host = n.host;
+
+              a = role: if !builtins.elem role [ "cache" "gateway" ] then "--option substituters=10.0.0.3" else "";
 
               script =
                 ''
@@ -193,6 +181,17 @@
       filteredMachines = f: builtins.filter f machines;
 
       mapListToAttr = f: l: builtins.listToAttrs (builtins.map f l);
+
+      substituterModule = { role, ... }: {
+        imports = [
+          { nix.settings.substituters = [ "https://cache.nixos.org/" ]; }
+          (if !builtins.elem role [ "cache" "gateway" ] then {
+            nix.settings.substituters = map ({ private_ipv4, ... }: "http://${private_ipv4}") allMachines.cachehosts;
+            # fixme: hardcoded and unsecure!
+            nix.settings.trusted-public-keys = [ "nomad-cluster-cache:9N2kLCc7dUndvNy7ZgO13R19ByA9JmI6dYhE8MzwIOw=" ];
+          } else { })
+        ];
+      };
 
     in
     {
@@ -303,15 +302,23 @@
         (machine@{ name, id, public_ipv4, private_ipv4, role, ... }:
           {
             name = id;
-            value = nixosConfigurationSetup {
-              name = name;
-              host = if public_ipv4 != "" then public_ipv4 else private_ipv4;
-              specialArgs = { inherit machine; };
-              modules =
-                [
+            value =
+
+              lib.nixosSystem {
+                inherit (meta) system pkgs;
+                specialArgs = meta.specialArgs // { inherit machine; };
+                modules = defaultModules ++ [
                   {
-                    networking.hostName = name;
+                    _module.args.nixinate = {
+                      host = if public_ipv4 != "" then public_ipv4 else private_ipv4;
+                      sshUser = "root";
+                      buildOn = "remote"; # valid args are "local" or "remote"
+                      substituteOnTarget = false; # if buildOn is "local" then it will substitute on the target, "-s"
+                      hermetic = false;
+                    };
                   }
+                  (substituterModule machine)
+                  { networking.hostName = name; }
                   ({ modulesPath, ... }: {
                     imports = [
                       (modulesPath + "/installer/scan/not-detected.nix")
@@ -321,7 +328,8 @@
                   ./nixos/roles/${role}
                   ./nixos/components
                 ];
-            };
+              };
+
           })
         machines);
     };
