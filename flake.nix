@@ -253,7 +253,40 @@
                 '');
               };
           })
-          (filteredMachines ({ public_ipv4, ... }: public_ipv4 != ""));
+          allMachines.jumphosts;
+      } //
+      {
+        cacheupdate = mapListToAttr
+          ({ name, id, private_ipv4, ... }: {
+            name = id;
+            value =
+              let
+                inherit (pkgs.lib) getExe optionalString concatStringsSep;
+                nix = "${getExe pkgs.nix}";
+                nixOptions = "";
+                flake = self;
+                user = "root";
+                cacheHost = private_ipv4;
+                nixos-rebuild = "${getExe pkgs.nixos-rebuild}";
+                openssh = "${getExe pkgs.openssh}";
+                flock = "${getExe final.flock}";
+                commands = map
+                  ({ id, name, ... }: ''
+                    echo "🤞 build configuration for ${name} on ${cacheHost}"
+                    ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/nixinate-${id} nixos-rebuild build --flake ${flake}#${id}" )
+                  '')
+                  allMachines.machines;
+              in
+              {
+                type = "app";
+                program = toString (pkgs.writers.writeDash "update" ''
+                  echo "🚀 Sending flake to ${cacheHost} via nix copy:"
+                  ( set -x; ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${cacheHost} )
+                  ${concatStringsSep "\n" commands}
+                '');
+              };
+          })
+          allMachines.cachehosts;
       };
 
       colmena = {
