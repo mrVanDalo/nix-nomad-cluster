@@ -79,53 +79,23 @@
         specialArgs = { inherit machines; };
       };
 
-      nixosConfigurationSetup =
-        { name
-        , host ? "${name}.private"
-        , modules
-        , specialArgs ? { }
-        }:
-        lib.nixosSystem {
-          inherit (meta) system pkgs;
-          specialArgs = meta.specialArgs // specialArgs;
-          modules = modules ++ defaultModules ++ [
-            {
-              _module.args.nixinate = {
-                host = host;
-                sshUser = "root";
-                buildOn = "remote"; # valid args are "local" or "remote"
-                substituteOnTarget = false; # if buildOn is "local" then it will substitute on the target, "-s"
-                hermetic = false;
-              };
-            }
-          ];
-        };
-
-
-
       defaultModules = [
-
         {
           _module.args.self = self;
-
           # make flake inputs accessiable in NixOS
           _module.args.inputs = self.inputs;
         }
-
-        ({ pkgs, lib, ... }:
-
-          {
-            nix = {
-              # no channesl needed this way
-              nixPath = [ "nixpkgs=${pkgs.path}" ];
-              # make flakes available
-              package = pkgs.nixUnstable;
-              extraOptions = ''
-                experimental-features = nix-command flakes
-              '';
-            };
-          })
-
+        ({ pkgs, lib, ... }: {
+          nix = {
+            # no channesl needed this way
+            nixPath = [ "nixpkgs=${pkgs.path}" ];
+            # make flakes available
+            package = pkgs.nixUnstable;
+            extraOptions = ''
+              experimental-features = nix-command flakes
+            '';
+          };
+        })
         {
           boot.tmp.useTmpfs = lib.mkDefault true;
           imports = [
@@ -133,9 +103,13 @@
             disko.nixosModules.disko
           ];
         }
-
       ];
+
       final = pkgs;
+      allMachines = import ./machines lib;
+      machines = allMachines.machines;
+      filteredMachines = f: builtins.filter f machines;
+      mapListToAttr = f: l: builtins.listToAttrs (builtins.map f l);
 
       generateNixOSAnywhere = flake:
         let
@@ -144,21 +118,20 @@
           mkDeployScript = { machine, dryRun }:
             let
               n = flake.nixosConfigurations.${machine}._module.args.nixinate;
+              c = flake.nixosConfigurations.${machine}._module.args.cluster;
               user = n.sshUser or "root";
               host = n.host;
-
-              a = role: if !builtins.elem role [ "cache" "gateway" ] then "--option substituters=10.0.0.3" else "";
-
+              # todo : use c.cachehosts
+              substitute = if !builtins.elem c.role [ "cache" "gateway" ] then "--option trusted-substituters http://10.0.0.3 --option substituters http://10.0.0.3" else "";
               script =
                 ''
                   set -e
                   echo "👤 SSH User: ${user}"
                   echo "🌐 SSH Host: ${host}"
                   echo
-                  echo "🧹 nixos-anywhere --build-on-remote --flake .#${machine} root@${host}"
-                  #echo "> press Ctrl-C you changed your mind <"
-                  #read answer
-                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --build-on-remote --flake .#${machine} root@${host}
+                  echo "🧹 nixos-anywhere ${substitute} --build-on-remote --flake .#${machine} root@${host}"
+                  ${pkgs.gum}/bin/gum confirm "Really want to Re-Initalize (format) $machine?" || exit 0
+                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere ${substitute} --build-on-remote --flake .#${machine} root@${host}
                   echo
                 '';
             in
@@ -175,12 +148,6 @@
             });
         };
 
-      allMachines = import ./machines lib;
-      machines = allMachines.machines;
-
-      filteredMachines = f: builtins.filter f machines;
-
-      mapListToAttr = f: l: builtins.listToAttrs (builtins.map f l);
 
       substituterModule = { role, ... }: {
         imports = [
@@ -228,10 +195,6 @@
                 export PATH=${pkgs.gum}/bin:${pkgs.findutils}/bin:$PATH
                 machine=$( cat ${machinesList} | gum filter )
                 job=$( gum choose nixinate init )
-                if [[ $job == "init" ]]
-                then
-                    gum confirm "Really want to Re-Initalize (format) $machine?" || exit 0
-                fi
                 nix run .#apps.$job.$machine
               '');
           };
@@ -335,33 +298,37 @@
         (machine@{ name, id, public_ipv4, private_ipv4, role, ... }:
           {
             name = id;
-            value =
-
-              lib.nixosSystem {
-                inherit (meta) system pkgs;
-                specialArgs = meta.specialArgs // { inherit machine; };
-                modules = defaultModules ++ [
-                  {
-                    _module.args.nixinate = {
-                      host = if public_ipv4 != "" then public_ipv4 else private_ipv4;
-                      sshUser = "root";
-                      buildOn = "remote"; # valid args are "local" or "remote"
-                      substituteOnTarget = false; # if buildOn is "local" then it will substitute on the target, "-s"
-                      hermetic = false;
-                    };
-                  }
-                  (substituterModule machine)
-                  { networking.hostName = name; }
-                  ({ modulesPath, ... }: {
-                    imports = [
-                      (modulesPath + "/installer/scan/not-detected.nix")
-                      (modulesPath + "/profiles/qemu-guest.nix")
-                    ];
-                  })
-                  ./nixos/roles/${role}
-                  ./nixos/components
-                ];
-              };
+            value = lib.nixosSystem {
+              inherit (meta) system pkgs;
+              specialArgs = meta.specialArgs // { inherit machine; };
+              modules = defaultModules ++ [
+                {
+                  _module.args.nixinate = {
+                    host = if public_ipv4 != "" then public_ipv4 else private_ipv4;
+                    sshUser = "root";
+                    buildOn = "remote"; # valid args are "local" or "remote"
+                    substituteOnTarget = false; # if buildOn is "local" then it will substitute on the target, "-s"
+                    hermetic = false;
+                  };
+                }
+                {
+                  _module.args.cluster = {
+                    inherit (machine) name id role;
+                    inherit (allMachines) machines jumphosts cachehosts;
+                  };
+                }
+                (substituterModule machine)
+                { networking.hostName = name; }
+                ({ modulesPath, ... }: {
+                  imports = [
+                    (modulesPath + "/installer/scan/not-detected.nix")
+                    (modulesPath + "/profiles/qemu-guest.nix")
+                  ];
+                })
+                ./nixos/roles/${role}
+                ./nixos/components
+              ];
+            };
 
           })
         machines);
