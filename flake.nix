@@ -162,6 +162,25 @@
     in
     {
 
+      packages.${system} = {
+        default = self.packages.${system}.cachedInstaller;
+        cachedInstaller =
+          (pkgs.nixos ([
+            {
+              nix.settings.substituters =
+                let
+                  privateCache = map ({ private_ipv4, ... }: "http://${private_ipv4}") allMachines.cachehosts;
+                in
+                privateCache ++ [ "https://cache.nixos.org" ];
+              # todo: use proper key here
+              nix.settings.trusted-public-keys = [ "nomad-cluster-cache:9N2kLCc7dUndvNy7ZgO13R19ByA9JmI6dYhE8MzwIOw=" ];
+            }
+            { system.kexec-installer.name = "nixos-kexec-installer-noninteractive"; }
+            nixos-images.nixosModules.noninteractive
+            nixos-images.nixosModules.kexec-installer
+          ])).config.system.build.kexecTarball;
+      };
+
       devShells.${system}.default =
         pkgs.mkShell {
           buildInputs = [
@@ -248,6 +267,40 @@
                   echo "🚀 Sending flake to ${cacheHost} via nix copy:"
                   ( set -x; ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${cacheHost} )
                   ${concatStringsSep "\n" commands}
+                '');
+              };
+          })
+          allMachines.cachehosts;
+      } //
+      {
+        buildCacheImage = mapListToAttr
+          ({ name, id, private_ipv4, ... }: {
+            name = id;
+            value =
+              let
+                inherit (pkgs.lib) getExe optionalString concatStringsSep;
+                nix = "${getExe pkgs.nix}";
+                nixOptions = "";
+                flake = self;
+                user = "root";
+                cacheHost = private_ipv4;
+                nixos-rebuild = "${getExe pkgs.nixos-rebuild}";
+                openssh = "${getExe pkgs.openssh}";
+                flock = "${getExe final.flock}";
+                commands = map
+                  ({ id, name, ... }: ''
+                    echo "🤞 build configuration for ${name} on ${cacheHost}"
+                    ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/nixinate-${id} nixos-rebuild build --flake ${flake}#${id}" )
+                    ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/nix-images-${id} nix build #${id}" )
+                  '')
+                  allMachines.machines;
+              in
+              {
+                type = "app";
+                program = toString (pkgs.writers.writeDash "update" ''
+                  echo "🚀 Sending flake to ${cacheHost} via nix copy:"
+                  ( set -x; ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${cacheHost} )
+                  ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/buildCacheImage nix build ${flake}#cachedInstaller" )
                 '');
               };
           })
