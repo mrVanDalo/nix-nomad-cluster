@@ -131,7 +131,7 @@
                   echo
                   echo "🧹 nixos-anywhere --build-on-remote -L --flake .#${machine} root@${host}"
                   ${pkgs.gum}/bin/gum confirm "Really want to Re-Initalize (format) $machine?" || exit 0
-                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere -L --build-on-remote --flake .#${machine} root@${host}
+                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --build-on-remote --kexec http://10.0.0.3/nixos-anywhere/image.tgz --flake .#${machine} root@${host}
                   echo
                 '';
             in
