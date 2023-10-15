@@ -183,6 +183,7 @@
                 machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) allMachines.jumphosts));
               in
               toString (pkgs.writers.writeBash "gummy-all" ''
+                set -e
                 export PATH=${pkgs.gum}/bin:${pkgs.findutils}/bin:$PATH
                 machine=$( cat ${machinesList} | gum filter )
                 job=sshuttle
@@ -196,6 +197,7 @@
                 machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) machines));
               in
               toString (pkgs.writers.writeBash "gummy-all" ''
+                set -e
                 export PATH=${pkgs.gum}/bin:${pkgs.findutils}/bin:$PATH
                 machine=$( cat ${machinesList} | gum filter )
                 job=$( gum choose nixinate init )
