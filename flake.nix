@@ -8,6 +8,7 @@
     nixpkgs-legacy_2105.url = "github:nixos/nixpkgs/nixos-21.05";
     nixos-hardware.url = "github:nixos/nixos-hardware";
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
+    nixos-images.url = "github:nix-community/nixos-images";
 
     sops-nix.url = "github:Mic92/sops-nix";
     nixinate.url = "github:matthewcroughan/nixinate";
@@ -38,6 +39,7 @@
     , nixinate
     , nixos-anywhere
     , nixos-hardware
+    , nixos-images
     , nixpkgs
     , nixpkgs-legacy_2105
     , nixpkgs-legacy_2205
@@ -122,16 +124,18 @@
               user = n.sshUser or "root";
               host = n.host;
               # todo : use c.cachehosts
-              substitute = if !builtins.elem c.role [ "cache" "gateway" ] then "--option trusted-substituters http://10.0.0.3 --option substituters http://10.0.0.3" else "";
+              #substitute = if !builtins.elem c.role [ "cache" "gateway" ] then "--option trusted-substituters http://10.0.0.3 --option substituters http://10.0.0.3" else "";
+              #substitute = if !builtins.elem c.role [ "cache" "gateway" ] then "--option trusted-substituters http://10.0.0.3 --option substituters http://10.0.0.3 --option builders-use-substitutes true" else "";
+              substitute = "";
               script =
                 ''
                   set -e
                   echo "👤 SSH User: ${user}"
                   echo "🌐 SSH Host: ${host}"
                   echo
-                  echo "🧹 nixos-anywhere ${substitute} --build-on-remote --flake .#${machine} root@${host}"
+                  echo "🧹 nixos-anywhere ${substitute} --build-on-remote -L --flake .#${machine} root@${host}"
                   ${pkgs.gum}/bin/gum confirm "Really want to Re-Initalize (format) $machine?" || exit 0
-                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere ${substitute} --build-on-remote --flake .#${machine} root@${host}
+                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere ${substitute} -L --build-on-remote --flake .#${machine} root@${host}
                   echo
                 '';
             in
@@ -237,6 +241,7 @@
                   ({ id, name, ... }: ''
                     echo "🤞 build configuration for ${name} on ${cacheHost}"
                     ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/nixinate-${id} nixos-rebuild build --flake ${flake}#${id}" )
+                    ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/nix-images-${id} nix build #${id}" )
                   '')
                   allMachines.machines;
               in

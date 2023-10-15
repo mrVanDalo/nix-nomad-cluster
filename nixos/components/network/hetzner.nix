@@ -23,14 +23,13 @@ with types;
         # create default routes for IPv4
         { routeConfig.Gateway = machine.default_gateway; }
       ];
+      dns = [
+        "8.8.8.8"
+        "1.1.1.1"
+      ];
       # make the routes on this interface a dependency for network-online.target
       linkConfig.RequiredForOnline = "routable";
     };
-    # todo : find better version of this
-    networking.nameservers = [
-      "8.8.8.8"
-      "1.1.1.1"
-    ];
 
     # todo: move this to `components.hetzner.boot`
     boot.loader.grub = {
