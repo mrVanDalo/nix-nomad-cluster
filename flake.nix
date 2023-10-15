@@ -123,19 +123,15 @@
               c = flake.nixosConfigurations.${machine}._module.args.cluster;
               user = n.sshUser or "root";
               host = n.host;
-              # todo : use c.cachehosts
-              #substitute = if !builtins.elem c.role [ "cache" "gateway" ] then "--option trusted-substituters http://10.0.0.3 --option substituters http://10.0.0.3" else "";
-              #substitute = if !builtins.elem c.role [ "cache" "gateway" ] then "--option trusted-substituters http://10.0.0.3 --option substituters http://10.0.0.3 --option builders-use-substitutes true" else "";
-              substitute = "";
               script =
                 ''
                   set -e
                   echo "👤 SSH User: ${user}"
                   echo "🌐 SSH Host: ${host}"
                   echo
-                  echo "🧹 nixos-anywhere ${substitute} --build-on-remote -L --flake .#${machine} root@${host}"
+                  echo "🧹 nixos-anywhere --build-on-remote -L --flake .#${machine} root@${host}"
                   ${pkgs.gum}/bin/gum confirm "Really want to Re-Initalize (format) $machine?" || exit 0
-                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere ${substitute} -L --build-on-remote --flake .#${machine} root@${host}
+                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere -L --build-on-remote --flake .#${machine} root@${host}
                   echo
                 '';
             in
@@ -152,7 +148,6 @@
             });
         };
 
-
       substituterModule = { role, ... }: {
         imports = [
           { nix.settings.substituters = [ "https://cache.nixos.org/" ]; }
@@ -166,6 +161,7 @@
 
     in
     {
+
       devShells.${system}.default =
         pkgs.mkShell {
           buildInputs = [
@@ -175,7 +171,6 @@
 
       apps = {
         ${system} = {
-
           sshuttle = {
             type = "app";
             program =
@@ -258,48 +253,6 @@
           })
           allMachines.cachehosts;
       };
-
-      colmena = {
-        meta = {
-          nixpkgs = meta.pkgs;
-          specialArgs = meta.specialArgs;
-        };
-      } // {
-        meta.nodeSpecialArgs =
-          (mapListToAttr (
-            (machine@{ id, ... }:
-              {
-                name = id;
-                value = { inherit machine; };
-              }
-            )
-          ));
-      } // (mapListToAttr
-        (machine@{ name, id, public_ipv4, private_ipv4, tags, role, environment, ... }:
-          {
-            name = id;
-            value = {
-              imports = [
-                {
-                  deployment.targetHost = if public_ipv4 != "" then public_ipv4 else private_ipv4;
-                  deployment.tags = "${role},${environment}";
-                  deployment.buildOnTarget = true;
-                }
-                {
-                  networking.hostName = name;
-                }
-                ({ modulesPath, ... }: {
-                  imports = [
-                    (modulesPath + "/installer/scan/not-detected.nix")
-                    (modulesPath + "/profiles/qemu-guest.nix")
-                  ];
-                })
-                ./nixos/roles/${tags.role}
-                ./nixos/components
-              ];
-            };
-          })
-        machines);
 
       nixosConfigurations = (mapListToAttr
         (machine@{ name, id, public_ipv4, private_ipv4, role, ... }:
