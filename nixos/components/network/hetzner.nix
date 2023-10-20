@@ -13,6 +13,8 @@ with types;
   config = mkIf config.components.network.hetzner.enable {
 
     networking.firewall.enable = false;
+    networking.useDHCP = false;
+    networking.dhcpcd.enable = false;
 
     # todo: move this to `components.hetzner.network`
     systemd.network.enable = true;

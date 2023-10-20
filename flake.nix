@@ -107,45 +107,93 @@
         }
       ];
 
-      final = pkgs;
       allMachines = import ./machines lib;
       machines = allMachines.machines;
-      filteredMachines = f: builtins.filter f machines;
       mapListToAttr = f: l: builtins.listToAttrs (builtins.map f l);
 
-      generateNixOSAnywhere = flake:
+      generateCacheUpdate = flake:
+        with pkgs.lib;
         let
           machines = builtins.attrNames flake.nixosConfigurations;
-          validMachines = final.lib.remove "" (final.lib.forEach machines (x: final.lib.optionalString (flake.nixosConfigurations."${x}"._module.args ? nixinate) "${x}"));
-          mkDeployScript = { machine, dryRun }:
+          validMachines = filter
+            (machine:
+              (flake.nixosConfigurations."${machine}"._module.args ? nixinate) &&
+              (flake.nixosConfigurations."${machine}"._module.args ? cluster)
+            )
+            machines;
+          cacheMachines = filter
+            (machine: flake.nixosConfigurations."${machine}"._module.args.cluster.role == "cache")
+            validMachines;
+          mkDeployScript = machine:
             let
               n = flake.nixosConfigurations.${machine}._module.args.nixinate;
               c = flake.nixosConfigurations.${machine}._module.args.cluster;
               user = n.sshUser or "root";
               host = n.host;
+              nixOptions = n.nixOptions or "";
+              commands = map
+                (name: ''
+                  echo "🤞 build configuration for ${name} on ${machine} (${host})"
+                  ( set -x; ${getExe pkgs.openssh} -t ${user}@${host} "sudo flock -w 60 /dev/shm/nixinate-${name} nixos-rebuild build --flake ${flake}#${name}" )
+                '')
+                validMachines;
+            in
+            pkgs.writers.writeBash "deploy-${machine}.sh"
+              ''
+                echo "🚀 Sending flake to ${host} via nix copy:"
+                ( set -x; ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${host} )
+                ${concatStringsSep "\n" commands}
+              '';
+        in
+        {
+          cache-update = nixpkgs.lib.genAttrs cacheMachines (machine:
+            {
+              type = "app";
+              program = toString (mkDeployScript machine);
+            }
+          );
+        };
+
+      generateNixOSAnywhere = flake:
+        with pkgs.lib;
+        let
+          machines = builtins.attrNames flake.nixosConfigurations;
+          validMachines = filter
+            (machine:
+              (flake.nixosConfigurations."${machine}"._module.args ? nixinate) &&
+              (flake.nixosConfigurations."${machine}"._module.args ? cluster)
+            )
+            machines;
+          mkDeployScript = machine:
+            let
+              n = flake.nixosConfigurations.${machine}._module.args.nixinate;
+              c = flake.nixosConfigurations.${machine}._module.args.cluster;
+              user = n.sshUser or "root";
+              host = n.host;
+              kexec = optionalString (c ? kexec) "--kexec ${c.kexec}";
+              command = "nixos-anywhere --build-on-remote ${kexec} --flake .#${machine} root@${host}";
               script =
                 ''
                   set -e
+                  export PATH=${nixos-anywhere.packages.${system}.nixos-anywhere}/bin:${pkgs.gum}/bin:$PATH
+
                   echo "👤 SSH User: ${user}"
                   echo "🌐 SSH Host: ${host}"
                   echo
-                  echo "🧹 nixos-anywhere --build-on-remote -L --flake .#${machine} root@${host}"
-                  ${pkgs.gum}/bin/gum confirm "Really want to Re-Initalize (format) $machine?" || exit 0
-                  ${nixos-anywhere.packages.${system}.nixos-anywhere}/bin/nixos-anywhere --build-on-remote --kexec http://10.0.0.3/download/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz --flake .#${machine} root@${host}
-                  echo
+                  echo "🍕 ${command}"
+                  gum confirm "Really want to Re-Initalize ${machine}?" || exit 0
+                  ${command}
                 '';
             in
-            final.writeScript "deploy-${machine}.sh" script;
+            pkgs.writers.writeBash "deploy-${machine}.sh" script;
         in
         {
-          init = nixpkgs.lib.genAttrs validMachines (x:
+          init = nixpkgs.lib.genAttrs validMachines (machine:
             {
               type = "app";
-              program = toString (mkDeployScript {
-                machine = x;
-                dryRun = false;
-              });
-            });
+              program = toString (mkDeployScript machine);
+            }
+          );
         };
 
       substituterModule = { role, ... }: {
@@ -222,6 +270,7 @@
       } //
       (nixinate.nixinate.x86_64-linux self) //
       (generateNixOSAnywhere self) //
+      (generateCacheUpdate self) //
       {
         sshuttle = mapListToAttr
           ({ name, id, public_ipv4, ... }: {
@@ -239,40 +288,6 @@
           allMachines.jumphosts;
       } //
       {
-        cacheupdate = mapListToAttr
-          ({ name, id, private_ipv4, ... }: {
-            name = id;
-            value =
-              let
-                inherit (pkgs.lib) getExe optionalString concatStringsSep;
-                nix = "${getExe pkgs.nix}";
-                nixOptions = "";
-                flake = self;
-                user = "root";
-                cacheHost = private_ipv4;
-                nixos-rebuild = "${getExe pkgs.nixos-rebuild}";
-                openssh = "${getExe pkgs.openssh}";
-                flock = "${getExe final.flock}";
-                commands = map
-                  ({ id, name, ... }: ''
-                    echo "🤞 build configuration for ${name} on ${cacheHost}"
-                    ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/nixinate-${id} nixos-rebuild build --flake ${flake}#${id}" )
-                    ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/nix-images-${id} nix build #${id}" )
-                  '')
-                  allMachines.machines;
-              in
-              {
-                type = "app";
-                program = toString (pkgs.writers.writeDash "update" ''
-                  echo "🚀 Sending flake to ${cacheHost} via nix copy:"
-                  ( set -x; ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${cacheHost} )
-                  ${concatStringsSep "\n" commands}
-                '');
-              };
-          })
-          allMachines.cachehosts;
-      } //
-      {
         buildCacheImage = mapListToAttr
           ({ name, id, private_ipv4, ... }: {
             name = id;
@@ -284,16 +299,7 @@
                 flake = self;
                 user = "root";
                 cacheHost = private_ipv4;
-                nixos-rebuild = "${getExe pkgs.nixos-rebuild}";
                 openssh = "${getExe pkgs.openssh}";
-                flock = "${getExe final.flock}";
-                commands = map
-                  ({ id, name, ... }: ''
-                    echo "🤞 build configuration for ${name} on ${cacheHost}"
-                    ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/nixinate-${id} nixos-rebuild build --flake ${flake}#${id}" )
-                    ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/nix-images-${id} nix build #${id}" )
-                  '')
-                  allMachines.machines;
               in
               {
                 type = "app";
@@ -323,8 +329,6 @@
                     substituteOnTarget = false; # if buildOn is "local" then it will substitute on the target, "-s"
                     hermetic = false;
                   };
-                }
-                {
                   _module.args.cluster = {
                     inherit (machine) name id role;
                     inherit (allMachines) machines jumphosts cachehosts;

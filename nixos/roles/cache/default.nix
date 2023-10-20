@@ -4,8 +4,6 @@
     ./disk-config.nix
 
     ./cache.nix
-    #./proxy.nix
-    #./proxy2.nix
   ];
 
   # todo : use this repo or something to make a proxy work (if this repo works)

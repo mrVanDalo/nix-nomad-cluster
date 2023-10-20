@@ -29,7 +29,8 @@
 
       # to download the modified image
       locations."/download" = {
-        root = "/srv";
+        #root = "/srv";
+        alias = pkgs.nixos-images.bla;
       };
 
       locations."/".extraConfig = ''
