@@ -49,7 +49,8 @@ Now you can `init` all the other machines.
   - something like `parallel screen -md nix run .#apps.init.{1} ::: development_....`
   - make sure new ssh keys properly handled
 - make cache dynamic => it takes forever if the wrong cache is used.
-- ssh key management is a bit annoying at the moment
+- ssh host key management is a bit annoying at the moment
+- add ./user to manage users, public ssh keys, gpg keys and other types of information
 - make ./machines a flake
 
 # Goals
