@@ -113,8 +113,8 @@
     in
     {
 
-    # todo : add parallel execution
-    # todo : add option to toggle gum confirm on init
+      # todo : add parallel execution
+      # todo : add option to toggle gum confirm on init
       cluster = flake:
         (generateApply flake) //
         (generateInit flake) //

@@ -29,7 +29,7 @@ nix flake show
 ```shell
 # set up gateway
 nix run .#apps.init.core_network_cor-net-gateway
-# create ssh tunnel 
+# create ssh tunnel
 nix run .#apps.sshuttle.core_network_cor-net-gateway
 
 # set up cache
@@ -50,6 +50,7 @@ Now you can `init` all the other machines.
   - make sure new ssh keys properly handled
 - make cache dynamic => it takes forever if the wrong cache is used.
 - ssh key management is a bit annoying at the moment
+- make ./machines a flake
 
 # Goals
 

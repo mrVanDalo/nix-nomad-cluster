@@ -8,7 +8,7 @@
       },
       "locked": {
         "lastModified": 1,
-        "narHash": "sha256-+tcUAR2qehKlm3vGaMAv54voVJYKiIJFi/9IGVGeefQ=",
+        "narHash": "sha256-9OaoYXz4zmIiss5w5AFKoV2bZUJSSKcIyvmWLBnyDxs=",
         "path": "./cluster-flake",
         "type": "path"
       },
