@@ -43,12 +43,20 @@
       enable = true;
       datasources.settings = {
         apiVersion = 1;
-        datasources = [{
-          name = "Thanos";
-          type = "prometheus";
-          uid = "P1";
-          url = "http://localhost:10912";
-        }];
+        datasources = [
+          {
+            name = "Thanos";
+            type = "prometheus";
+            uid = "Thanos1";
+            url = "http://localhost:10912";
+          }
+          {
+            name = "Loki";
+            type = "loki";
+            uid = "Loki1";
+            url = "http://localhost:3100";
+          }
+        ];
       };
       dashboards.settings = {
         apiVersion = 1;

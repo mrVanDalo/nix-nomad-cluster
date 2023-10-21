@@ -38,7 +38,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1"
+        "uid": "Thanos1"
       },
       "fieldConfig": {
         "defaults": {
@@ -119,7 +119,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1"
+            "uid": "Thanos1"
           },
           "editorMode": "code",
           "expr": "system_load1 / system_n_cpus",
@@ -183,7 +183,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1"
+        "uid": "Thanos1"
       },
       "fieldConfig": {
         "defaults": {
@@ -235,7 +235,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1"
+            "uid": "Thanos1"
           },
           "editorMode": "builder",
           "expr": "disk_used_percent{host=\"$host\", fstype!=\"tmpfs\", fstype!=\"devtmpfs\"}",
@@ -264,7 +264,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1"
+        "uid": "Thanos1"
       },
       "fieldConfig": {
         "defaults": {
@@ -345,7 +345,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1"
+            "uid": "Thanos1"
           },
           "editorMode": "code",
           "expr": "system_load1{host=\"$host\"} / system_n_cpus{host=\"$host\"}",
@@ -362,7 +362,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1"
+        "uid": "Thanos1"
       },
       "fieldConfig": {
         "defaults": {
@@ -446,7 +446,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1"
+            "uid": "Thanos1"
           },
           "editorMode": "builder",
           "expr": "cpu_usage_iowait{cpu=\"cpu-total\", host=\"$host\"}",
@@ -473,7 +473,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "P1"
+          "uid": "Thanos1"
         },
         "definition": "label_values(host)",
         "hide": 0,
@@ -499,7 +499,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Overview Copy",
+  "title": "Overview",
   "uid": "e6632dd2-efc5-462d-a8ef-171462fafb3d",
   "version": 12,
   "weekStart": ""
