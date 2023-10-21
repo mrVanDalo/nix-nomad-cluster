@@ -29,6 +29,8 @@
       url = "github:kirelagin/dns.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    cluster.url = path:./cluster-flake;
   };
 
   outputs =
@@ -47,6 +49,7 @@
     , nixpkgs-unstable
     , permown
     , sops-nix
+    , cluster
     }:
     let
 
@@ -156,95 +159,6 @@
           );
         };
 
-      # todo: cluster-flake
-      generateCacheUpdate = flake:
-        with pkgs.lib;
-        let
-          machines = builtins.attrNames flake.nixosConfigurations;
-          validMachines = filter
-            (machine:
-              (flake.nixosConfigurations."${machine}"._module.args ? nixinate) &&
-              (flake.nixosConfigurations."${machine}"._module.args ? cluster)
-            )
-            machines;
-          cacheMachines = filter
-            (machine: flake.nixosConfigurations."${machine}"._module.args.cluster.role == "cache")
-            validMachines;
-          mkDeployScript = machine:
-            let
-              n = flake.nixosConfigurations.${machine}._module.args.nixinate;
-              c = flake.nixosConfigurations.${machine}._module.args.cluster;
-              user = n.sshUser or "root";
-              host = n.host;
-              openssh = getExe pkgs.openssh;
-              nix = getExe pkgs.nix;
-              nixOptions = n.nixOptions or "";
-              commands = map
-                (name: ''
-                  echo "🤞 build configuration for ${name} on ${machine} (${host})"
-                  ( set -x; ${openssh} -t ${user}@${host} "sudo flock -w 60 /dev/shm/nixinate-${name} nixos-rebuild build --flake ${flake}#${name}" )
-                '')
-                validMachines;
-            in
-            pkgs.writers.writeBash "deploy-${machine}.sh"
-              ''
-                echo "🚀 Sending flake to ${host} via nix copy:"
-                ( set -x; ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${host} )
-                ${concatStringsSep "\n" commands}
-              '';
-        in
-        {
-          cache-update = nixpkgs.lib.genAttrs cacheMachines (machine:
-            {
-              type = "app";
-              program = toString (mkDeployScript machine);
-            }
-          );
-        };
-
-      # todo : cluster-flake
-      generateNixOSAnywhere = flake:
-        with pkgs.lib;
-        let
-          machines = builtins.attrNames flake.nixosConfigurations;
-          validMachines = filter
-            (machine:
-              (flake.nixosConfigurations."${machine}"._module.args ? nixinate) &&
-              (flake.nixosConfigurations."${machine}"._module.args ? cluster)
-            )
-            machines;
-          mkDeployScript = machine:
-            let
-              n = flake.nixosConfigurations.${machine}._module.args.nixinate;
-              c = flake.nixosConfigurations.${machine}._module.args.cluster;
-              user = n.sshUser or "root";
-              host = n.host;
-              kexec = optionalString (c ? kexec) "--kexec \"${c.kexec}\"";
-              command = "nixos-anywhere --build-on-remote ${kexec} --flake .#${machine} root@${host}";
-              script =
-                ''
-                  set -e
-                  export PATH=${nixos-anywhere.packages.${system}.nixos-anywhere}/bin:${pkgs.gum}/bin:$PATH
-
-                  echo "👤 SSH User: ${user}"
-                  echo "🌐 SSH Host: ${host}"
-                  echo
-                  echo "🍕 ${command}"
-                  gum confirm "Really want to Re-Initalize ${machine}?" || exit 0
-                  ${command}
-                '';
-            in
-            pkgs.writers.writeBash "deploy-${machine}.sh" script;
-        in
-        {
-          init = nixpkgs.lib.genAttrs validMachines (machine:
-            {
-              type = "app";
-              program = toString (mkDeployScript machine);
-            }
-          );
-        };
-
       # todo : cluster-flake
       # todo : put this in a component
       substituterModule = { role, ... }: {
@@ -307,15 +221,13 @@
                 set -e
                 export PATH=${pkgs.gum}/bin:${pkgs.findutils}/bin:$PATH
                 machine=$( cat ${machinesList} | gum filter )
-                job=$( gum choose nixinate init )
+                job=$( gum choose apply init )
                 nix run .#apps.$job.$machine
               '');
           };
         };
       } //
-      (nixinate.nixinate.x86_64-linux self) //
-      (generateNixOSAnywhere self) //
-      (generateCacheUpdate self) //
+      (cluster.cluster self) //
       (generateBuildKexec self) //
       {
         sshuttle = mapListToAttr
@@ -355,7 +267,6 @@
                     inherit (allMachines) machines jumphosts cachehosts;
                   } // (if (role != "cache") then {
                     kexec = "http://${cacheHost.private_ipv4}/downloads/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz";
-                    #kexec = "yolo";
                   } else { });
                 }
                 (substituterModule machine)

@@ -27,8 +27,21 @@ nix flake show
 ```
 
 ```shell
-nix run .#apps.override.dev_network_gateway
+# set up gateway
+nix run .#apps.init.core_network_cor-net-gateway
+# create ssh tunnel 
+nix run .#apps.sshuttle.core_network_cor-net-gateway
+
+# set up cache
+nix run .#apps.init.development_core_dev-cache
+nix run .#apps.update-cache.development_core_dev-cache
+nix run .#apps.build-kexec.development_core_dev-cache
+
+# set up monitor system
+nix run .#apps.init.development_core_dev-monitor
 ```
+
+Now you can `init` all the other machines.
 
 # Todos
 
@@ -36,3 +49,12 @@ nix run .#apps.override.dev_network_gateway
   - something like `parallel screen -md nix run .#apps.init.{1} ::: development_....`
   - make sure new ssh keys properly handled
 - make cache dynamic => it takes forever if the wrong cache is used.
+- ssh key management is a bit annoying at the moment
+
+# Goals
+
+- Follow clean and easy way of nixinate
+- flake blueprint to create and manage a cluster (nomad, kubernetes, ... )
+  - with private cache to speed up deployments on scale
+  - with montoring already set up
+  - with nat gateway, if not provided by hardware or cloud provider
