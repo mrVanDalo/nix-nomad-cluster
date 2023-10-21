@@ -28,9 +28,8 @@
       #forceSSL = true;
 
       # to download the modified image
-      locations."/download" = {
-        #root = "/srv";
-        alias = pkgs.nixos-images.bla;
+      locations."/downloads" = {
+        root = "/srv";
       };
 
       locations."/".extraConfig = ''

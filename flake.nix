@@ -83,6 +83,7 @@
 
       defaultModules = [
         {
+          # make flake accessiable in NixOS
           _module.args.self = self;
           # make flake inputs accessiable in NixOS
           _module.args.inputs = self.inputs;
@@ -108,9 +109,54 @@
       ];
 
       allMachines = import ./machines lib;
+
+      # todo : rename to machines.all
       machines = allMachines.machines;
+      cacheHost = builtins.head allMachines.cachehosts;
+
       mapListToAttr = f: l: builtins.listToAttrs (builtins.map f l);
 
+      # todo : cluster-flake
+      generateBuildKexec = flake:
+        with pkgs.lib;
+        let
+          machines = builtins.attrNames flake.nixosConfigurations;
+          validMachines = filter
+            (machine:
+              (flake.nixosConfigurations."${machine}"._module.args ? nixinate) &&
+              (flake.nixosConfigurations."${machine}"._module.args ? cluster)
+            )
+            machines;
+          cacheMachines = filter
+            (machine: flake.nixosConfigurations."${machine}"._module.args.cluster.role == "cache")
+            validMachines;
+          mkDeployScript = machine:
+            let
+              n = flake.nixosConfigurations.${machine}._module.args.nixinate;
+              c = flake.nixosConfigurations.${machine}._module.args.cluster;
+              user = n.sshUser or "root";
+              host = n.host;
+              openssh = getExe pkgs.openssh;
+              nix = getExe pkgs.nix;
+              nixOptions = n.nixOptions or "";
+            in
+            pkgs.writers.writeBash "deploy-${machine}.sh"
+              ''
+                echo "🚀 Sending flake to ${host} via nix copy:"
+                ( set -x; ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${host} )
+                ( set -x; ${openssh} -t ${user}@${host} "sudo flock -w 60 /dev/shm/buildCacheImage nix build --out-link /srv/downloads ${flake}#cachedInstaller" )
+              '';
+        in
+        {
+          build-kexec = nixpkgs.lib.genAttrs cacheMachines (machine:
+            {
+              type = "app";
+              program = toString (mkDeployScript machine);
+            }
+          );
+        };
+
+      # todo: cluster-flake
       generateCacheUpdate = flake:
         with pkgs.lib;
         let
@@ -130,11 +176,13 @@
               c = flake.nixosConfigurations.${machine}._module.args.cluster;
               user = n.sshUser or "root";
               host = n.host;
+              openssh = getExe pkgs.openssh;
+              nix = getExe pkgs.nix;
               nixOptions = n.nixOptions or "";
               commands = map
                 (name: ''
                   echo "🤞 build configuration for ${name} on ${machine} (${host})"
-                  ( set -x; ${getExe pkgs.openssh} -t ${user}@${host} "sudo flock -w 60 /dev/shm/nixinate-${name} nixos-rebuild build --flake ${flake}#${name}" )
+                  ( set -x; ${openssh} -t ${user}@${host} "sudo flock -w 60 /dev/shm/nixinate-${name} nixos-rebuild build --flake ${flake}#${name}" )
                 '')
                 validMachines;
             in
@@ -154,6 +202,7 @@
           );
         };
 
+      # todo : cluster-flake
       generateNixOSAnywhere = flake:
         with pkgs.lib;
         let
@@ -170,7 +219,7 @@
               c = flake.nixosConfigurations.${machine}._module.args.cluster;
               user = n.sshUser or "root";
               host = n.host;
-              kexec = optionalString (c ? kexec) "--kexec ${c.kexec}";
+              kexec = optionalString (c ? kexec) "--kexec \"${c.kexec}\"";
               command = "nixos-anywhere --build-on-remote ${kexec} --flake .#${machine} root@${host}";
               script =
                 ''
@@ -196,6 +245,8 @@
           );
         };
 
+      # todo : cluster-flake
+      # todo : put this in a component
       substituterModule = { role, ... }: {
         imports = [
           { nix.settings.substituters = [ "https://cache.nixos.org/" ]; }
@@ -212,6 +263,7 @@
 
       packages.${system} = {
         default = self.packages.${system}.cachedInstaller;
+        # todo : cluster-flake
         cachedInstaller =
           (pkgs.nixos ([
             {
@@ -228,13 +280,6 @@
             nixos-images.nixosModules.kexec-installer
           ])).config.system.build.kexecTarball;
       };
-
-      devShells.${system}.default =
-        pkgs.mkShell {
-          buildInputs = [
-            pkgs.awscli2
-          ];
-        };
 
       apps = {
         ${system} = {
@@ -271,6 +316,7 @@
       (nixinate.nixinate.x86_64-linux self) //
       (generateNixOSAnywhere self) //
       (generateCacheUpdate self) //
+      (generateBuildKexec self) //
       {
         sshuttle = mapListToAttr
           ({ name, id, public_ipv4, ... }: {
@@ -286,31 +332,6 @@
               };
           })
           allMachines.jumphosts;
-      } //
-      {
-        buildCacheImage = mapListToAttr
-          ({ name, id, private_ipv4, ... }: {
-            name = id;
-            value =
-              let
-                inherit (pkgs.lib) getExe optionalString concatStringsSep;
-                nix = "${getExe pkgs.nix}";
-                nixOptions = "";
-                flake = self;
-                user = "root";
-                cacheHost = private_ipv4;
-                openssh = "${getExe pkgs.openssh}";
-              in
-              {
-                type = "app";
-                program = toString (pkgs.writers.writeDash "update" ''
-                  echo "🚀 Sending flake to ${cacheHost} via nix copy:"
-                  ( set -x; ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${cacheHost} )
-                  ( set -x; ${openssh} -t ${user}@${cacheHost} "sudo flock -w 60 /dev/shm/buildCacheImage nix build ${flake}#cachedInstaller" )
-                '');
-              };
-          })
-          allMachines.cachehosts;
       };
 
       nixosConfigurations = (mapListToAttr
@@ -332,7 +353,10 @@
                   _module.args.cluster = {
                     inherit (machine) name id role;
                     inherit (allMachines) machines jumphosts cachehosts;
-                  };
+                  } // (if (role != "cache") then {
+                    kexec = "http://${cacheHost.private_ipv4}/downloads/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz";
+                    #kexec = "yolo";
+                  } else { });
                 }
                 (substituterModule machine)
                 { networking.hostName = name; }

@@ -2,7 +2,7 @@
 resource "hcloud_server" "cache" {
   name        = "${local.environment_short}-cache"
   image       = "debian-11"
-  server_type = "cx11"
+  server_type = "cx21"
   ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network
