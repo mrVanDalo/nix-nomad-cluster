@@ -19,7 +19,7 @@ with types;
     # todo: move this to `components.hetzner.network`
     systemd.network.enable = true;
     systemd.network.networks."10-private-hetzner" = {
-      matchConfig.Name = "*";
+      matchConfig.Name = "ens*";
       networkConfig.DHCP = "ipv4";
       routes = [
         # create default routes for IPv4

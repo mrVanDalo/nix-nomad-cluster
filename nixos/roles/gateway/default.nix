@@ -3,6 +3,7 @@
   imports = [
     ./disk-config.nix
     ./gateway.nix
+    ./knot.nix
   ];
 
   networking.hostName = lib.mkDefault "gateway";

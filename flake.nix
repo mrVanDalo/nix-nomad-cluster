@@ -81,7 +81,7 @@
             })
           ];
         };
-        specialArgs = { inherit machines; };
+        specialArgs = { inherit machines dns; };
       };
 
       defaultModules = [
@@ -239,6 +239,7 @@
                 program = toString (pkgs.writers.writeDash "sshuttle" ''
                   ${pkgs.sshuttle}/bin/sshuttle \
                     -r root@${public_ipv4} \
+                    --dns --to-ns=10.0.0.2 \
                     10.0.0.0/8
                 '');
               };
