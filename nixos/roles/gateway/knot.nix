@@ -1,8 +1,7 @@
-{ pkgs, lib, dns, system, machines, ... }:
+{ pkgs, lib, dns, system, machines, toplevelDomain, ... }:
 with lib;
 with dns.lib.combinators;
 let
-  toplevelDomain = "cluster";
   util = dns.util.${pkgs.system};
   dnsConfiguration = with dns.lib.combinators; {
     SOA = {
@@ -12,7 +11,14 @@ let
     };
 
     subdomains =
-      builtins.listToAttrs (map ({ private_ipv4, name, ... }: { inherit name; value.A = [ private_ipv4 ]; })
+      builtins.listToAttrs (map
+        ({ private_ipv4, name, ... }: {
+          inherit name;
+          value = {
+            A = [ private_ipv4 ];
+            subdomains."*".A = [ private_ipv4 ];
+          };
+        })
         machines
       );
   };

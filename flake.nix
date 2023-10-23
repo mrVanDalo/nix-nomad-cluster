@@ -236,11 +236,19 @@
             value =
               {
                 type = "app";
-                program = toString (pkgs.writers.writeDash "sshuttle" ''
-                  ${pkgs.sshuttle}/bin/sshuttle \
+                program = toString (pkgs.writers.writeBash "sshuttle" ''
+                  dns=$( ${lib.getExe pkgs.gum} choose DNS noDNS )
+                  if [[ $dns == DNS ]]
+                  then
+                  ${lib.getExe pkgs.sshuttle} \
                     -r root@${public_ipv4} \
                     --dns --to-ns=10.0.0.2 \
                     10.0.0.0/8
+                  else
+                  ${lib.getExe pkgs.sshuttle} \
+                    -r root@${public_ipv4} \
+                    10.0.0.0/8
+                  fi
                 '');
               };
           })
@@ -253,7 +261,10 @@
             name = id;
             value = lib.nixosSystem {
               inherit (meta) system pkgs;
-              specialArgs = meta.specialArgs // { inherit machine; };
+              specialArgs = meta.specialArgs // {
+                inherit machine;
+                toplevelDomain = "cluster";
+              };
               modules = defaultModules ++ [
                 {
                   _module.args.nixinate = {
@@ -266,6 +277,7 @@
                   _module.args.cluster = {
                     inherit (machine) name id role;
                     inherit (allMachines) machines jumphosts cachehosts;
+                    toplevelDomain = "cluster";
                   } // (if (role != "cache") then {
                     kexec = "http://${cacheHost.private_ipv4}/downloads/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz";
                   } else { });

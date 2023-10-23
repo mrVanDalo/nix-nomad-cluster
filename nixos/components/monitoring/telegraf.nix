@@ -33,5 +33,18 @@ with types;
       };
     };
 
+    services.nginx = {
+      enable = true;
+      virtualHosts = {
+        "telegraf.*" = {
+          locations."/" = {
+            proxyWebsockets = true;
+            recommendedProxySettings = true;
+            proxyPass = "http://localhost:9273";
+          };
+        };
+      };
+    };
+
   };
 }

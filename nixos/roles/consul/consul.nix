@@ -1,4 +1,4 @@
-{ machines, machine, lib, ... }:
+{ config, machines, lib, ... }:
 let
   consulMachines = builtins.filter ({ role, id, ... }: role == "consul") machines;
 in
@@ -7,7 +7,8 @@ in
   services.nginx = {
     enable = true;
     virtualHosts = {
-      ${machine.name} = {
+      ${config.networking.hostName} = {
+        default = true;
         locations."/" = {
           proxyPass = "http://localhost:8500";
         };

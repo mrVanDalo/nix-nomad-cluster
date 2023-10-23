@@ -9,7 +9,8 @@
   services.nginx = {
     enable = true;
     virtualHosts = {
-      ${machine.name} = {
+      ${config.networking.hostName} = {
+        serverAliases = [ "grafana.*" ];
         locations."/" = {
           proxyWebsockets = true;
           recommendedProxySettings = true;

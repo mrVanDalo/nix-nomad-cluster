@@ -23,5 +23,18 @@ with types;
       };
     };
 
+    services.nginx = {
+      enable = true;
+      virtualHosts = {
+        "netdata.*" = {
+          locations."/" = {
+            proxyWebsockets = true;
+            recommendedProxySettings = true;
+            proxyPass = "http://localhost:19999";
+          };
+        };
+      };
+    };
+
   };
 }

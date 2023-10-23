@@ -24,6 +24,8 @@
     #recommendedZstdSettings = true;
 
     virtualHosts."cache" = {
+      default = true;
+
       #enableACME = true;
       #forceSSL = true;
 

@@ -1,4 +1,4 @@
-{ machines, machine, lib, ... }:
+{ config, machines, machine, lib, ... }:
 let
   otherNomadMachines = builtins.filter ({ role, id, ... }: role == "nomad" && id != machine.id) machines;
   nomadMachines = builtins.filter ({ role, id, ... }: role == "nomad") machines;
@@ -12,7 +12,8 @@ in
   services.nginx = {
     enable = true;
     virtualHosts = {
-      ${machine.name} = {
+      ${config.networking.hostName} = {
+        default = true;
         locations."/" = {
           proxyPass = "http://localhost:4646";
         };
