@@ -1,7 +1,7 @@
 { lib, ... }:
 {
-  # gateway
-  components.network.hetzner.enable = false;
+
+
   networking.nat = {
     enable = true;
     # todo : make dynamic
@@ -11,7 +11,5 @@
   services.telegraf.extraConfig.inputs.netstat = { };
 
 
-  # make sure fireall is working
-  networking.firewall.enable = lib.mkForce false;
 
 }

@@ -52,6 +52,7 @@ Now you can `init` all the other machines.
 - ssh host key management is a bit annoying at the moment
 - add ./user to manage users, public ssh keys, gpg keys and other types of information
 - make ./machines a flake
+- use unbound instead of 8.8.8.8 and 1.1.1.1 (should also make VPN in the future easier)
 
 # Goals
 

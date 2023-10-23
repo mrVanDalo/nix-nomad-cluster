@@ -19,6 +19,8 @@ with types;
       pkgs.htop
       pkgs.silver-searcher
       pkgs.jq
+      pkgs.bat
+      pkgs.dnsutils
     ];
 
     environment.extraInit = ''

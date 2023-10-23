@@ -27,15 +27,15 @@ in
 
 {
 
-  networking.firewall.allowedTCPPorts = [ 53 ];
-  networking.firewall.allowedUDPPorts = [ 53 ];
+  networking.firewall.allowedTCPPorts = [ 52 ];
+  networking.firewall.allowedUDPPorts = [ 52 ];
 
   services.knot = {
     enable = true;
 
     extraConfig = ''
       server:
-        listen: [ "0.0.0.0@53", "::@53" ]
+        listen: [ "0.0.0.0@52", "::@52" ]
 
       log:
         - target: syslog

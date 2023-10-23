@@ -2,6 +2,7 @@
 {
   imports = [
     ./disk-config.nix
+    ./vault.nix
   ];
 
   networking.hostName = lib.mkDefault "vault";

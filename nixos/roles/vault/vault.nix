@@ -1,4 +1,4 @@
-{ config, machine, machines, lib, ... }:
+{ config, machine, machines, lib, pkgs, ... }:
 let
   otherNomadMachines = builtins.filter ({ role, id, ... }: role == "nomad" && id != machine.id) machines;
   nomadMachines = builtins.filter ({ role, id, ... }: role == "nomad") machines;
@@ -9,6 +9,7 @@ in
     enable = true;
     virtualHosts = {
       ${config.networking.hostName} = {
+        serverAliases = [ "${config.networking.hostName}.*" ];
         default = true;
         locations."/" = {
           proxyPass = "http://localhost:8200";
@@ -18,12 +19,13 @@ in
   };
 
   services.vault = {
+    package = pkgs.vault-bin;
     enable = true;
     dev = true;
-
-    extraConfig = {
-      ui = true;
-    };
+    devRootTokenID = "test-key";
+    extraConfig = ''
+      ui = true
+    '';
 
   };
 }
