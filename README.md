@@ -55,6 +55,8 @@ Now you can `init` all the other machines.
 - set up openvpn and including dns configuration against unbound
 - make unbound also handle wildcard dns entries (by forwarding to knot for example)
 - nomad and vault don't restart after `nix flake update`
+- deploy jaeger ui in nomad cluster
+- install opentelemetry-collector in monitoring instance
 
 # Goals
 

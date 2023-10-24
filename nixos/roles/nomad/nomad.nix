@@ -25,20 +25,24 @@ in
     enable = true;
     enableDocker = true;
 
+    extraPackages = [
+      pkgs.consul
+    ];
+
     # clear `/var/lib/private/nomad` if upgrade fails
     package = pkgs.nomad;
-
     #package = pkgs.unstable.nomad;
     #package = pkgs.unstable.nomad_1_6;
 
     # makes nomad run as root user
-    # dropPrivileges = false;
+    dropPrivileges = false;
 
     settings = {
       #log_level = "DEBUG";
 
       client = {
         enabled = true;
+        cni_path = "${pkgs.cni-plugins}/bin";
       };
 
       server = {
@@ -73,10 +77,16 @@ in
     };
   };
 
+  boot.kernel.sysctl = {
+    "net.bridge.bridge-nf-call-ip6tables" = 1;
+    "net.bridge.bridge-nf-call-iptables" = 1;
+    "net.bridge.bridge-nf-call-arptables" = 1;
+  };
+
   # local consul to talk to everyone
   services.consul = {
     enable = true;
-    package = pkgs.unstable.consul;
+    #package = pkgs.unstable.consul;
 
     extraConfig = {
       server = false;
@@ -85,7 +95,7 @@ in
       retry_interval = "10s";
       ports.grpc = 8502;
       connect.enabled = true;
-      client_addr = machine.private_ipv4;
+      client_addr = "127.0.0.1"; # to make sure only localhost nomad can see this consul
       bind_addr = machine.private_ipv4;
     };
   };

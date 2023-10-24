@@ -12,7 +12,10 @@ with types;
 
   config = mkIf config.components.network.hetzner.enable {
 
-    networking.firewall.enable = false;
+    networking.firewall.enable = true;
+    networking.firewall.allowedTCPPortRanges = [{ from = 0; to = 65535; }];
+    networking.firewall.allowedUDPPortRanges = [{ from = 0; to = 65535; }];
+
     networking.useDHCP = false;
     networking.dhcpcd.enable = false;
 

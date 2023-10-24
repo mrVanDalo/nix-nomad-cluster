@@ -21,10 +21,10 @@ job "traefik" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.traefik-public.rule=Host(`traefik.example.com`)",
+        "traefik.http.routers.traefik-public.rule=Host(`traefik.nomad`)",
         "traefik.http.routers.traefik-public.service=api@internal",
-        "traefik.http.routers.traefik-public.middlewares=admin-auth",
-        "traefik.http.middlewares.admin-auth.basicauth.users=admin:admin",
+        #"traefik.http.routers.traefik-public.middlewares=admin-auth",
+        #"traefik.http.middlewares.admin-auth.basicauth.users=admin:admin",
       ]
 
       check {

@@ -2,6 +2,19 @@
 with lib;
 {
 
+  imports = [
+    # fixme: ugly hack for now this should be handled by knot
+    {
+      services.unbound.settings.server = {
+        local-zone = [ ''"nomad" static'' ];
+        local-data = [
+          ''"traefik.nomad IN A 10.0.0.5"''
+          ''"app.nomad IN A 10.0.0.5"''
+        ];
+      };
+    }
+  ];
+
   # not needed for sshuttle --dns at the moment
   #networking.firewall.allowedTCPPorts = [ 53 ];
   #networking.firewall.allowedUDPPorts = [ 53 ];

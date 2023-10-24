@@ -18,7 +18,7 @@ in
 
   services.consul = {
     enable = true;
-    package = pkgs.unstable.consul;
+    #package = pkgs.unstable.consul;
 
     webUi = true;
 

@@ -1,4 +1,10 @@
-{ config, pkgs, lib, machines, machine, ... }: {
+{ config, pkgs, lib, machines, machine, ... }:
+let
+  nomadMachines = builtins.filter ({ role, id, ... }: role == "nomad") machines;
+  consulMachines = builtins.filter ({ role, id, ... }: role == "consul") machines;
+in
+{
+
 
   networking.firewall.allowedTCPPorts = [ 9090 ];
 
@@ -61,6 +67,21 @@
             };
           }
         ];
+      }
+      #{
+      #  job_name = "nomad";
+      #  scrape_interval = "5s";
+      #  nomad_sd_configs = [{
+      #    server = lib.head (map ({ private_ipv4, ... }: private_ipv4) nomadMachines);
+      #  }];
+      #}
+
+      {
+        job_name = "consul";
+        scrape_interval = "5s";
+        consul_sd_configs = [{
+          server = lib.head (map ({ private_ipv4, ... }: "${private_ipv4}:8500") consulMachines);
+        }];
       }
     ];
   };
