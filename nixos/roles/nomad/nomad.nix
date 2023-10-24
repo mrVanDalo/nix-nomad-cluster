@@ -1,4 +1,4 @@
-{ config, machines, machine, lib, ... }:
+{ config, machines, machine, lib, pkgs, ... }:
 let
   otherNomadMachines = builtins.filter ({ role, id, ... }: role == "nomad" && id != machine.id) machines;
   nomadMachines = builtins.filter ({ role, id, ... }: role == "nomad") machines;
@@ -25,28 +25,46 @@ in
     enable = true;
     enableDocker = true;
 
+    # clear `/var/lib/private/nomad` if upgrade fails
+    package = pkgs.nomad;
+
+    #package = pkgs.unstable.nomad;
+    #package = pkgs.unstable.nomad_1_6;
+
     # makes nomad run as root user
     # dropPrivileges = false;
 
     settings = {
+      #log_level = "DEBUG";
+
       client = {
         enabled = true;
-        server_join = {
-          start_join = lib.flatten (map ({ private_ipv4, ... }: private_ipv4) nomadMachines);
-          retry_max = 3;
-          retry_interval = "10s";
-        };
       };
+
       server = {
         enabled = true;
         bootstrap_expect = 3;
-        server_join = {
-          start_join = lib.flatten (map ({ private_ipv4, ... }: private_ipv4) nomadMachines);
-          retry_max = 3;
-          retry_interval = "10s";
-        };
+        rejoin_after_leave = true;
       };
-      consul.address = "127.0.0.1:8500";
+
+      # use consule to form cluster
+      # even the servers find each other over consul
+      consul = {
+        # The address to the Consul agent.
+        address = "127.0.0.1:8500";
+
+        # The service name to register the server and client with Consul.
+        server_service_name = "nomad";
+        client_service_name = "nomad-client";
+
+        # Enables automatically registering the services.
+        auto_advertise = true;
+
+        # Enabling the server and client to bootstrap using Consul.
+        server_auto_join = true;
+        client_auto_join = true;
+      };
+
       ui = {
         enabled = true;
         consul.ui_url = "http://${(builtins.head consulMachines).private_ipv4}/ui";
@@ -58,6 +76,7 @@ in
   # local consul to talk to everyone
   services.consul = {
     enable = true;
+    package = pkgs.unstable.consul;
 
     extraConfig = {
       server = false;
@@ -66,6 +85,8 @@ in
       retry_interval = "10s";
       ports.grpc = 8502;
       connect.enabled = true;
+      client_addr = machine.private_ipv4;
+      bind_addr = machine.private_ipv4;
     };
   };
 }

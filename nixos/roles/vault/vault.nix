@@ -19,7 +19,7 @@ in
   };
 
   services.vault = {
-    package = pkgs.vault-bin;
+    package = pkgs.unstable.vault-bin;
     enable = true;
     dev = true;
     devRootTokenID = "test-key";

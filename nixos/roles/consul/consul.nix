@@ -1,4 +1,4 @@
-{ config, machines, lib, ... }:
+{ config, machines, lib, pkgs, ... }:
 let
   consulMachines = builtins.filter ({ role, id, ... }: role == "consul") machines;
 in
@@ -18,6 +18,7 @@ in
 
   services.consul = {
     enable = true;
+    package = pkgs.unstable.consul;
 
     webUi = true;
 
@@ -27,6 +28,7 @@ in
     extraConfig = {
       server = true;
       bind_addr = "0.0.0.0";
+      client_addr = "0.0.0.0";
 
       bootstrap_expect = 1;
 
@@ -35,7 +37,6 @@ in
       retry_interval = "10s";
 
       ui_config.enabled = true;
-      client_addr = "0.0.0.0";
       ports.grpc = 8502;
       connect.enabled = true;
 

@@ -54,6 +54,7 @@ Now you can `init` all the other machines.
 - make ./machines a flake (optional)
 - set up openvpn and including dns configuration against unbound
 - make unbound also handle wildcard dns entries (by forwarding to knot for example)
+- nomad and vault don't restart after `nix flake update`
 
 # Goals
 
@@ -62,3 +63,23 @@ Now you can `init` all the other machines.
   - with private cache to speed up deployments on scale
   - with montoring already set up
   - with nat gateway, if not provided by hardware or cloud provider
+
+# Features
+
+- Monitoring infrastructure already in place
+  - Logs, Metrics, Telemetry
+
+# Pros
+
+- Provider-agnostic: you could even manage "real" machines, by just creating `./machines/<name>.json`
+- Using vanilla nixos flake
+  - Only terraform and nix language is required to understand the project.
+  - DevOP-client-agnostic: they only need nix to be installed. Everything else comes will be shipped, without calling sudo and installing gpg or tls keys in your trust chain.
+- Very adaptive to new situations
+- No Database for machines is needed, everything can be managed by this git repository (you should use a s3 bucket for terraform though)
+- Easy adaptable to CI deployment workflows (the terraform part sadly isn't)
+
+# Cons
+
+- A limited amount of machines can be handled like this (I guess not more than 400)
+- Machine-ids could be no-uniq
