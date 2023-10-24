@@ -51,8 +51,9 @@ Now you can `init` all the other machines.
 - make cache dynamic => it takes forever if the wrong cache is used.
 - ssh host key management is a bit annoying at the moment
 - add ./user to manage users, public ssh keys, gpg keys and other types of information
-- make ./machines a flake
-- use unbound instead of 8.8.8.8 and 1.1.1.1 (should also make VPN in the future easier)
+- make ./machines a flake (optional)
+- set up openvpn and including dns configuration against unbound
+- make unbound also handle wildcard dns entries (by forwarding to knot for example)
 
 # Goals
 
