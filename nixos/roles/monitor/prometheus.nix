@@ -75,13 +75,32 @@ in
       #    server = lib.head (map ({ private_ipv4, ... }: private_ipv4) nomadMachines);
       #  }];
       #}
-
       {
         job_name = "consul";
         scrape_interval = "5s";
         consul_sd_configs = [{
           server = lib.head (map ({ private_ipv4, ... }: "${private_ipv4}:8500") consulMachines);
         }];
+        relabel_configs =
+          map
+            (label:
+              {
+                source_labels = [ "__meta_${label}" ];
+                target_label = label;
+              }
+            )
+            [
+              "consul_address"
+              "consul_dc"
+              "consul_health"
+              "consul_partition"
+              "consul_node"
+              "consul_service_address"
+              "consul_service_id"
+              "consul_service_port"
+              "consul_service"
+              "consul_tags"
+            ];
       }
     ];
   };
