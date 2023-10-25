@@ -3,7 +3,7 @@
   imports = [
     ./disk-config.nix
     ./gateway.nix
-    #./knot.nix
+    ./knot.nix
     ./unbound.nix
   ];
 

@@ -22,7 +22,7 @@ in
             rules = [
               {
                 alert = "InstanceDown";
-                expr = "up == 0";
+                expr = ''up{job != "consul" } == 0'';
                 for = "5m";
                 labels.severity = "page";
                 annotations = {
