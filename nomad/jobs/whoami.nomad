@@ -3,7 +3,7 @@ job "whoami" {
   datacenters = ["dc1"]
 
   group "whoami" {
-    count = 1
+    count = 3
 
     network {
       mode = "bridge"
