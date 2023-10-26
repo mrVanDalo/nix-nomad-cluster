@@ -204,6 +204,18 @@
                 nix run .#apps.$job.$machine
               '');
           };
+          cost = {
+            type = "app";
+            program =
+              let
+                machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) machines));
+              in
+              toString (pkgs.writers.writeBash "gummy-all" ''
+                set -e
+                export PATH=${pkgs.gojq}/bin:$PATH
+                cat machines/*.json | gojq '.tags.cost | tonumber' | gojq --slurp --raw-output 'add | "Monthly Costs \(.)€\nDaily Costs \(. / 30)€"'
+              '');
+          };
           default = {
             type = "app";
             program =

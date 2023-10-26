@@ -2,7 +2,7 @@
 resource "hcloud_server" "cache" {
   name        = "${local.environment_short}-cache"
   image       = "debian-11"
-  server_type = "cx21"
+  server_type = "cpx11"
   ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network
@@ -14,6 +14,7 @@ resource "hcloud_server" "cache" {
   labels = {
     role        = "cache"
     environment = var.environment
+    cost        = 5.18 + 10.47 # cpx11 + volume
   }
   user_data = <<EOH
 #cloud-config

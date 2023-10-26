@@ -5,7 +5,7 @@ resource "hcloud_server" "vault" {
   count       = local.vault_server_count
   name        = "${local.environment_short}-vault-${count.index}"
   image       = "debian-11"
-  server_type = "cx11"
+  server_type = "cpx11"
   ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network
@@ -13,6 +13,7 @@ resource "hcloud_server" "vault" {
   labels = {
     role        = "vault"
     environment = var.environment
+    cost        = 5.18 # cpx11
   }
   public_net {
     ipv4_enabled = false

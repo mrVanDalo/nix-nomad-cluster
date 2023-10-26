@@ -1,7 +1,7 @@
 resource "hcloud_server" "monitor" {
   name        = "${local.environment_short}-monitor"
   image       = "debian-11"
-  server_type = "cx11"
+  server_type = "cpx11"
   ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network
@@ -9,6 +9,7 @@ resource "hcloud_server" "monitor" {
   labels = {
     role        = "monitor"
     environment = var.environment
+    cost        = 5.18 # cpx11
   }
   public_net {
     ipv4_enabled = false

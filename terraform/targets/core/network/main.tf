@@ -36,7 +36,7 @@ resource "hcloud_network_route" "internet-gateway" {
 resource "hcloud_server" "gateway" {
   name        = "${local.environment_short}-net-gateway"
   image       = "debian-11"
-  server_type = "cx11"
+  server_type = "cpx11"
   ssh_keys    = [var.main_key]
   network {
     network_id = hcloud_network.network[index(local.networks, "eu-central")].id
@@ -50,6 +50,7 @@ resource "hcloud_server" "gateway" {
   labels = {
     role        = "gateway"
     environment = var.environment
+    cost        = 5.18 # cpx11
   }
   lifecycle {
     ignore_changes = [network]

@@ -5,7 +5,7 @@ resource "hcloud_server" "consul" {
   count       = local.consul_server_count
   name        = "${local.environment_short}-consul-${count.index}"
   image       = "debian-11"
-  server_type = "cx11"
+  server_type = "cpx11"
   ssh_keys    = [var.main_key]
   network {
     network_id = var.main_network
@@ -13,6 +13,7 @@ resource "hcloud_server" "consul" {
   labels = {
     role        = "consul"
     environment = var.environment
+    cost        = 5.18 # cpx11
   }
   public_net {
     ipv4_enabled = false

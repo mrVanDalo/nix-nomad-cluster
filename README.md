@@ -1,4 +1,3 @@
-
 ## How to set up whole infra
 
 ```shell
@@ -49,7 +48,7 @@ Now you can `init` all the other machines.
 - Encrypt disks by default
   - How to unlock disks? TPM?
 - Use TPM https://www.freedesktop.org/software/systemd/man/latest/systemd-cryptenroll.html to unlook vault eventually.
-
+- Adjust Blocksize of nix-store on cache instance to improve spead
 
 # Goals
 
