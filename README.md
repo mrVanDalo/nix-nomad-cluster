@@ -1,16 +1,3 @@
-## Buzzwords
-
-- Hetzner
-  - Other provider possible, just create them in terraform folder
-- NixOS store
-- Private network
-- Nomad
-- Vault
-- Consul
-- monitoring
-  - loki
-  - prometheus
-  - thanos
 
 ## How to set up whole infra
 
@@ -48,15 +35,21 @@ Now you can `init` all the other machines.
 - find a nice way to run init in parallel
   - something like `parallel screen -md nix run .#apps.init.{1} ::: development_....`
   - make sure new ssh keys properly handled
-- make cache dynamic => it takes forever if the wrong cache is used.
 - ssh host key management is a bit annoying at the moment
 - add ./user to manage users, public ssh keys, gpg keys and other types of information
 - make ./machines a flake (optional)
 - set up openvpn and including dns configuration against unbound
-- make unbound also handle wildcard dns entries (by forwarding to knot for example)
 - nomad and vault don't restart after `nix flake update`
 - deploy jaeger ui in nomad cluster
 - install opentelemetry-collector in monitoring instance
+- integrate [systemd-vault](https://github.com/numtide/systemd-vaultd) for secret management
+  - unlock vault initially by WebUI
+  - Dependencies are than :
+    - gateway <- vault <- consul <- nomad / everything nixos managed
+- Encrypt disks by default
+  - How to unlock disks? TPM?
+- Use TPM https://www.freedesktop.org/software/systemd/man/latest/systemd-cryptenroll.html to unlook vault eventually.
+
 
 # Goals
 
