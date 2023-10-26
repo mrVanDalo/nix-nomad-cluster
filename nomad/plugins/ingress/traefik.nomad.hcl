@@ -21,7 +21,7 @@ job "traefik" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.traefik-public.rule=Host(`traefik.nomad`)",
+        "traefik.http.routers.traefik-public.rule=Host(`traefik.apps.cluster`)",
         "traefik.http.routers.traefik-public.service=api@internal",
         #"traefik.http.routers.traefik-public.middlewares=admin-auth",
         #"traefik.http.middlewares.admin-auth.basicauth.users=admin:admin",

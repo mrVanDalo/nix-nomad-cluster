@@ -235,7 +235,7 @@
                   then
                   ${lib.getExe pkgs.sshuttle} \
                     -r root@${public_ipv4} \
-                    --dns \
+                    --dns --ns-hosts 10.0.0.2 \
                     10.0.0.0/8
                   else
                   ${lib.getExe pkgs.sshuttle} \

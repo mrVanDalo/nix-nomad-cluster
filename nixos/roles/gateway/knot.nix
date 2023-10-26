@@ -1,9 +1,10 @@
 { pkgs, lib, system, machine, machines, toplevelDomain, ... }:
 with lib;
-{
+let
+  nomadMachines = builtins.filter ({ role, id, ... }: role == "nomad") machines;
+  nomadMachine = head nomadMachines;
 
-  # putting the zone configuration in /etc/zones/ makes it easier to debug
-  environment.etc."zones/${toplevelDomain}.zone".text = ''
+  zoneConfiguration = pkgs.writeText "${toplevelDomain}.zone" ''
     $TTL 60
 
     @ IN SOA ${toplevelDomain}. ns1.${toplevelDomain}. (2023102500 86400 600 864000 60)
@@ -11,11 +12,24 @@ with lib;
 
     ns1 IN A ${machine.private_ipv4}
 
+    ;; cluster machines
     ${concatStringsSep "\n" (map ({private_ipv4, name, ...}: ''
     ${name} IN A ${private_ipv4}
     *.${name} IN A ${private_ipv4}
     '') machines)}
+
+    ;; nomad apps
+    ${concatStringsSep "\n" (map ({private_ipv4, ...}: "*.apps IN A ${private_ipv4}") nomadMachines)}
   '';
+in
+{
+
+
+  environment.etc."zones/${toplevelDomain}.zone".source = zoneConfiguration;
+
+  # putting the zone configuration in /etc/zones/ makes it easier to debug
+
+  systemd.services.knot.restartTriggers = [ zoneConfiguration ];
 
   services.knot = {
     enable = true;

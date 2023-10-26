@@ -1,4 +1,4 @@
-{ config, machines, machine, lib, pkgs, ... }:
+{ config, machines, machine, lib, pkgs, toplevelDomain, ... }:
 let
   otherNomadMachines = builtins.filter ({ role, id, ... }: role == "nomad" && id != machine.id) machines;
   nomadMachines = builtins.filter ({ role, id, ... }: role == "nomad") machines;
@@ -16,6 +16,14 @@ in
         default = true;
         locations."/" = {
           proxyPass = "http://localhost:4646";
+        };
+      };
+      "*.apps.${toplevelDomain}" = {
+        default = false;
+        locations."/" = {
+          proxyWebsockets = true;
+          recommendedProxySettings = true;
+          proxyPass = "http://localhost:8080";
         };
       };
     };

@@ -8,7 +8,7 @@ let
       (builtins.readDir ./.)));
 in
 {
-  inherit all ;
+  inherit all;
   jumphosts = builtins.filter ({ public_ipv4, ... }: public_ipv4 != "") all;
   cachehosts = builtins.filter ({ role, ... }: role == "cache") all;
 
