@@ -3,7 +3,7 @@
 locals {
   path_relative_to_include   = "core/keys"
   path_relative_from_include = "../.."
-  get_path_to_repo_root      = "../../../../"
+  get_path_to_repo_root      = "../../../.."
   get_path_from_repo_root    = "terraform/targets/core/keys"
 
   environment_short = substr(var.environment, 0, 3)
