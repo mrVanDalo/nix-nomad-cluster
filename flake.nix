@@ -25,18 +25,12 @@
       url = "github:mrVanDalo/module.permown";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    dns = {
-      url = "github:kirelagin/dns.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     cluster.url = path:./cluster-flake;
   };
 
   outputs =
     { self
     , disko
-    , dns
     , home-manager
     , nixinate
     , nixos-anywhere
@@ -81,7 +75,7 @@
             })
           ];
         };
-        specialArgs = { inherit machines dns; };
+        specialArgs = { };
       };
 
       defaultModules = [
@@ -111,11 +105,10 @@
         }
       ];
 
-      allMachines = import ./machines lib;
+      machines = import ./machines lib;
 
       # todo : rename to machines.all
-      machines = allMachines.machines;
-      cacheHost = builtins.head allMachines.cachehosts;
+      cacheHost = builtins.head machines.cachehosts;
 
       mapListToAttr = f: l: builtins.listToAttrs (builtins.map f l);
 
@@ -165,7 +158,7 @@
         imports = [
           { nix.settings.substituters = [ "https://cache.nixos.org/" ]; }
           (if !builtins.elem role [ "cache" "gateway" ] then {
-            nix.settings.substituters = map ({ private_ipv4, ... }: "http://${private_ipv4}") allMachines.cachehosts;
+            nix.settings.substituters = map ({ private_ipv4, ... }: "http://${private_ipv4}") machines.cachehosts;
             # fixme: hardcoded and unsecure!
             nix.settings.trusted-public-keys = [ "nomad-cluster-cache:9N2kLCc7dUndvNy7ZgO13R19ByA9JmI6dYhE8MzwIOw=" ];
           } else { })
@@ -183,7 +176,7 @@
             {
               nix.settings.substituters =
                 let
-                  privateCache = map ({ private_ipv4, ... }: "http://${private_ipv4}") allMachines.cachehosts;
+                  privateCache = map ({ private_ipv4, ... }: "http://${private_ipv4}") machines.cachehosts;
                 in
                 privateCache ++ [ "https://cache.nixos.org" ];
               # todo: use proper key here
@@ -201,7 +194,7 @@
             type = "app";
             program =
               let
-                machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) allMachines.jumphosts));
+                machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) machines.jumphosts));
               in
               toString (pkgs.writers.writeBash "gummy-all" ''
                 set -e
@@ -215,7 +208,7 @@
             type = "app";
             program =
               let
-                machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) machines));
+                machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) machines.all));
               in
               toString (pkgs.writers.writeBash "gummy-all" ''
                 set -e
@@ -252,7 +245,7 @@
                 '');
               };
           })
-          allMachines.jumphosts;
+          machines.jumphosts;
       };
 
       nixosConfigurations = (mapListToAttr
@@ -262,6 +255,7 @@
             value = lib.nixosSystem {
               inherit (meta) system pkgs;
               specialArgs = meta.specialArgs // {
+                machines = machines.all;
                 inherit machine;
                 toplevelDomain = "cluster";
               };
@@ -276,7 +270,7 @@
                   };
                   _module.args.cluster = {
                     inherit (machine) name id role;
-                    inherit (allMachines) machines jumphosts cachehosts;
+                    inherit (machines) all jumphosts cachehosts;
                     toplevelDomain = "cluster";
                   } // (if (role != "cache") then {
                     kexec = "http://${cacheHost.private_ipv4}/downloads/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz";
@@ -296,7 +290,7 @@
             };
 
           })
-        machines);
+        machines.all);
     };
 }
 
