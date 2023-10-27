@@ -79,7 +79,8 @@
               c = flake.nixosConfigurations.${machine}._module.args.cluster;
               user = n.sshUser or "root";
               host = n.host;
-              kexec = optionalString (c ? kexec) "--kexec \"${c.kexec}\"";
+              #kexec = optionalString (c ? kexec) "--kexec \"${c.kexec}\"";
+              kexec = "";
               command = "nixos-anywhere --build-on-remote ${kexec} --flake .#${machine} root@${host}";
               script =
                 ''
