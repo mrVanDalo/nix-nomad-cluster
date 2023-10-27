@@ -245,14 +245,14 @@
                   dns=$( ${lib.getExe pkgs.gum} choose DNS noDNS )
                   if [[ $dns == DNS ]]
                   then
-                  ${lib.getExe pkgs.sshuttle} \
+                  (set -x; ${lib.getExe pkgs.sshuttle} \
                     -r root@${public_ipv4} \
                     --dns --ns-hosts 10.0.0.2 \
-                    10.0.0.0/8
+                    10.0.0.0/8)
                   else
-                  ${lib.getExe pkgs.sshuttle} \
+                  (set -x; ${lib.getExe pkgs.sshuttle} \
                     -r root@${public_ipv4} \
-                    10.0.0.0/8
+                    10.0.0.0/8)
                   fi
                 '');
               };
@@ -284,9 +284,14 @@
                     inherit (machine) name id role;
                     inherit (machines) all jumphosts cachehosts;
                     toplevelDomain = "cluster";
-                  } // (if (role != "cache") then {
-                    kexec = "http://${cacheHost.private_ipv4}/downloads/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz";
-                  } else { });
+                  } // (
+                    if (
+                      # cache and gateway can't be initialized by the cache hosted kexec installer
+                      role != "cache" || role != "gateway"
+                    ) then {
+                      kexec = "http://${cacheHost.private_ipv4}/downloads/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz";
+                    } else { }
+                  );
                 }
                 (substituterModule machine)
                 { networking.hostName = name; }

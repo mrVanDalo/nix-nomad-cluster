@@ -7,6 +7,7 @@ variable "host" {}
 variable "to_repo_path" {}
 variable "to_relative_path" {}
 variable "default_gateway" {}
+variable "nameserver" {}
 variable "volumes" {
   type    = list(object({ name = string, linux_device = string, size = number }))
   default = []
@@ -25,6 +26,7 @@ resource "local_file" "host" {
     role            = var.host.labels.role
     environment     = var.host.labels.environment
     default_gateway = var.default_gateway
+    nameserver      = var.nameserver
     volumes = [for item in var.volumes :
       {
         name   = item.name
