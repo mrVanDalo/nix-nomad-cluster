@@ -15,8 +15,12 @@ output "main_network" {
   value = hcloud_network.network.id
 }
 
-output "nameserver_ip" {
+output "nameserver" {
   value = local.nat_ip
+}
+
+output "default_gateway" {
+  value = local.gateway_ip
 }
 
 resource "hcloud_network_subnet" "availability_network" {

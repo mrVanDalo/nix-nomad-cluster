@@ -14,11 +14,15 @@ generate "dependencies" {
   contents  = <<EOF
 variable "main_key" {}
 variable "main_network" {}
+variable "nameserver" {}
+variable "default_gateway" {}
 EOF
 }
 
 inputs = {
-  main_key     = dependency.keys.outputs.main_key
-  main_network = dependency.network.outputs.main_network
-  environment  = "development"
+  main_key        = dependency.keys.outputs.main_key
+  main_network    = dependency.network.outputs.main_network
+  nameserver      = dependency.network.outputs.nameserver
+  default_gateway = dependency.network.outputs.default_gateway
+  environment     = "development"
 }
