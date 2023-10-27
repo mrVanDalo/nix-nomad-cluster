@@ -15,6 +15,7 @@ generate "dependencies" {
 variable "main_key" {}
 variable "main_network" {}
 variable "nameserver" {}
+variable "cidr" {}
 variable "default_gateway" {}
 EOF
 }
@@ -24,5 +25,6 @@ inputs = {
   main_network    = dependency.network.outputs.main_network
   nameserver      = dependency.network.outputs.nameserver
   default_gateway = dependency.network.outputs.default_gateway
+  cidr            = dependency.network.outputs.cidr
   environment     = "development"
 }

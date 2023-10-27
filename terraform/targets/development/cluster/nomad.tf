@@ -22,7 +22,7 @@ resource "hcloud_server" "nomad" {
   user_data = <<EOH
 #cloud-config
 runcmd:
-  - ip route add default via 10.0.0.1
+  - ip route add default via ${var.default_gateway}
   - echo nameserver 8.8.8.8 > /etc/resolv.conf
 EOH
   lifecycle {
@@ -37,5 +37,7 @@ module "nomad_host_file" {
   to_relative_path = local.path_relative_to_include
   to_repo_path     = local.get_path_to_repo_root
   volumes          = []
-  default_gateway  = "10.0.0.1"
+  default_gateway  = var.default_gateway
+  cidr             = var.cidr
+  nameserver       = var.nameserver
 }

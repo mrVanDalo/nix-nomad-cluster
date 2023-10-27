@@ -15,6 +15,10 @@ output "main_network" {
   value = hcloud_network.network.id
 }
 
+output "cidr" {
+  value = local.main_cidr
+}
+
 output "nameserver" {
   value = local.nat_ip
 }
@@ -69,4 +73,5 @@ module "gateway_host_file" {
   to_repo_path     = local.get_path_to_repo_root
   default_gateway  = local.gateway_ip
   nameserver       = local.nat_ip
+  cidr             = local.main_cidr
 }

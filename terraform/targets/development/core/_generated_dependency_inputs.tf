@@ -2,4 +2,5 @@
 variable "main_key" {}
 variable "main_network" {}
 variable "nameserver" {}
+variable "cidr" {}
 variable "default_gateway" {}

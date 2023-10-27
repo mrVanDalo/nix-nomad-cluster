@@ -8,6 +8,9 @@ variable "to_repo_path" {}
 variable "to_relative_path" {}
 variable "default_gateway" {}
 variable "nameserver" {}
+variable "cidr" {
+  description = "cidr of private_ipv4"
+}
 variable "volumes" {
   type    = list(object({ name = string, linux_device = string, size = number }))
   default = []
@@ -27,6 +30,7 @@ resource "local_file" "host" {
     environment     = var.host.labels.environment
     default_gateway = var.default_gateway
     nameserver      = var.nameserver
+    cidr            = var.cidr
     volumes = [for item in var.volumes :
       {
         name   = item.name

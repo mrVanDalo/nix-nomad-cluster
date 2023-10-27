@@ -236,7 +236,7 @@
       (generateBuildKexec self) //
       {
         sshuttle = mapListToAttr
-          ({ name, id, public_ipv4, ... }: {
+          ({ name, id, public_ipv4, nameserver, cidr, ... }: {
             name = id;
             value =
               {
@@ -245,14 +245,9 @@
                   dns=$( ${lib.getExe pkgs.gum} choose DNS noDNS )
                   if [[ $dns == DNS ]]
                   then
-                  (set -x; ${lib.getExe pkgs.sshuttle} \
-                    -r root@${public_ipv4} \
-                    --dns --ns-hosts 10.0.0.2 \
-                    10.0.0.0/8)
+                    (set -x; ${lib.getExe pkgs.sshuttle} -r root@${public_ipv4} --dns --ns-hosts ${nameserver} ${cidr})
                   else
-                  (set -x; ${lib.getExe pkgs.sshuttle} \
-                    -r root@${public_ipv4} \
-                    10.0.0.0/8)
+                    (set -x; ${lib.getExe pkgs.sshuttle} -r root@${public_ipv4} ${cidr})
                   fi
                 '');
               };
