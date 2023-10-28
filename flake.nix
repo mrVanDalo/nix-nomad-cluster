@@ -140,6 +140,7 @@
               ''
                 echo "🚀 Sending flake to ${host} via nix copy:"
                 ( set -x; ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${host} )
+                ( set -x; ${openssh} -t ${user}@${host} "sudo flock -w 60 /dev/shm/buildCacheImage mkdir -p /srv && chown -R 766 /srv" )
                 ( set -x; ${openssh} -t ${user}@${host} "sudo flock -w 60 /dev/shm/buildCacheImage nix build --out-link /srv/downloads ${flake}#cachedInstaller" )
               '';
         in

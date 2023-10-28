@@ -32,6 +32,10 @@
       # to download the modified image
       locations."/downloads" = {
         root = "/srv";
+        extraConfig = ''
+          autoindex on;
+          autoindex_exact_size off;
+        '';
       };
 
       locations."/".extraConfig = ''
