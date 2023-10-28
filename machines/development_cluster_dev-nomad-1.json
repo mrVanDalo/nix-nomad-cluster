@@ -1,0 +1,1 @@
+{"cidr":"10.220.230.0/24","default_gateway":"10.220.230.1","environment":"development","id":"development_cluster_dev-nomad-1","name":"dev-nomad-1","nameserver":"10.220.230.3","private_ipv4":"10.220.230.8","public_ipv4":"","public_ipv6":"","role":"nomad","tags":{"cost":"5.18","environment":"development","role":"nomad"},"volumes":[]}

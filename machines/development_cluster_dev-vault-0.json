@@ -1,0 +1,1 @@
+{"cidr":"10.220.230.0/24","default_gateway":"10.220.230.1","environment":"development","id":"development_cluster_dev-vault-0","name":"dev-vault-0","nameserver":"10.220.230.3","private_ipv4":"10.220.230.7","public_ipv4":"","public_ipv6":"","role":"vault","tags":{"cost":"5.18","environment":"development","role":"vault"},"volumes":[]}

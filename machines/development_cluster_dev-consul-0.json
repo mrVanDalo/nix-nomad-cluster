@@ -1,0 +1,1 @@
+{"cidr":"10.220.230.0/24","default_gateway":"10.220.230.1","environment":"development","id":"development_cluster_dev-consul-0","name":"dev-consul-0","nameserver":"10.220.230.3","private_ipv4":"10.220.230.6","public_ipv4":"","public_ipv6":"","role":"consul","tags":{"cost":"5.18","environment":"development","role":"consul"},"volumes":[]}

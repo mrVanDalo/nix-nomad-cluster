@@ -231,7 +231,9 @@
                 nix run .#apps.init.$machine
               '');
           };
-          default = {
+          default = self.apps.${system}.apply;
+          # todo : put this in the nixos-cluster/flake.nix
+          apply = {
             type = "app";
             program =
               let

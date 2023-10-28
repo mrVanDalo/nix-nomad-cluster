@@ -12,7 +12,7 @@ module "consul" {
   environment           = var.environment
   nameserver            = var.nameserver
   network_id            = var.main_network
-  role                  = "cache"
+  role                  = "consul"
   ssh_keys              = [var.main_key]
   get_path_to_repo_root = local.get_path_to_repo_root
   to_relative_path      = local.path_relative_to_include
