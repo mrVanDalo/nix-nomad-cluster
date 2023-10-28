@@ -296,10 +296,10 @@
                   } // (
                     if (
                       # cache and gateway can't be initialized by the cache hosted kexec installer
-                      role != "cache" || role != "gateway"
-                    ) then {
+                      role == "cache" || role == "gateway"
+                    ) then { } else {
                       kexec = "http://${cacheHost.private_ipv4}/downloads/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz";
-                    } else { }
+                    }
                   );
                 }
                 (substituterModule machine)

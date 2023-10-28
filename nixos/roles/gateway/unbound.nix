@@ -37,9 +37,7 @@ with lib;
 
       stub-zone = {
         name = "${toplevelDomain}.";
-        # todo : find out if this works
-        #stub-addr = "${private_ipv4}@52";
-        stub-addr = "127.0.0.1@52";
+        stub-addr = "${machine.private_ipv4}@52";
       };
 
     };
