@@ -71,16 +71,16 @@ in
       #{
       #  job_name = "nomad";
       #  scrape_interval = "5s";
-      #  nomad_sd_configs = [{
-      #    server = lib.head (map ({ private_ipv4, ... }: private_ipv4) nomadMachines);
-      #  }];
+      #  nomad_sd_configs =
+      #    map ({ private_ipv4, ... }: { server = "${private_ipv4}:8500"; })
+      #      nomadMachines;
       #}
       {
         job_name = "consul";
         scrape_interval = "5s";
-        consul_sd_configs = [{
-          server = lib.head (map ({ private_ipv4, ... }: "${private_ipv4}:8500") consulMachines);
-        }];
+        consul_sd_configs =
+          map ({ private_ipv4, ... }: { server = "${private_ipv4}:8500"; })
+            consulMachines;
         relabel_configs =
           map
             (label:

@@ -10,7 +10,8 @@ let
     @ IN SOA ${toplevelDomain}. ns1.${toplevelDomain}. (2023102500 86400 600 864000 60)
     @ IN NS ns1
 
-    ns1 IN A ${machine.private_ipv4}
+    ;; ns1 IN A ${machine.private_ipv4}
+    ns1 IN A 127.0.0.1
 
     ;; cluster machines
     ${concatStringsSep "\n" (map ({private_ipv4, name, ...}: ''

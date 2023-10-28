@@ -53,9 +53,6 @@ job "traefik" {
 entryPoints:
   http:
     address: ":8080"
-    forwardedHeaders:
-      trustedIPs:
-        - 10.0.0.2
 api:
   dashboard: true
 log:

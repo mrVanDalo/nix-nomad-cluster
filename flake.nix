@@ -158,6 +158,7 @@
         imports = [
           { nix.settings.substituters = [ "https://cache.nixos.org/" ]; }
           (if !builtins.elem role [ "cache" "gateway" ] then {
+            # todo : add nameserver here so I can use domains
             nix.settings.substituters = map ({ private_ipv4, ... }: "http://${private_ipv4}") machines.cachehosts;
             # fixme: hardcoded and unsecure!
             nix.settings.trusted-public-keys = [ "nomad-cluster-cache:9N2kLCc7dUndvNy7ZgO13R19ByA9JmI6dYhE8MzwIOw=" ];
@@ -216,6 +217,20 @@
                 cat machines/*.json | gojq '.tags.cost | tonumber' | gojq --slurp --raw-output 'add | "Monthly Costs \(.)€\nDaily Costs \(. / 30)€"'
               '');
           };
+          # todo : put this in the nixos-cluster/flake.nix
+          init = {
+            type = "app";
+            program =
+              let
+                machinesList = pkgs.writeText "machines" (lib.concatStringsSep "\n" (map ({ id, ... }: id) machines.all));
+              in
+              toString (pkgs.writers.writeBash "gummy-all" ''
+                set -e
+                export PATH=${pkgs.gum}/bin:${pkgs.findutils}/bin:$PATH
+                machine=$( cat ${machinesList} | gum filter )
+                nix run .#apps.init.$machine
+              '');
+          };
           default = {
             type = "app";
             program =
@@ -226,8 +241,7 @@
                 set -e
                 export PATH=${pkgs.gum}/bin:${pkgs.findutils}/bin:$PATH
                 machine=$( cat ${machinesList} | gum filter )
-                job=$( gum choose apply init )
-                nix run .#apps.$job.$machine
+                nix run .#apps.apply.$machine
               '');
           };
         };

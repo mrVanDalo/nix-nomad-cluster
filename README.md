@@ -49,6 +49,7 @@ Now you can `init` all the other machines.
   - How to unlock disks? TPM?
 - Use TPM https://www.freedesktop.org/software/systemd/man/latest/systemd-cryptenroll.html to unlook vault eventually.
 - Adjust Blocksize of nix-store on cache instance to improve spead
+- use role/<name>/configuration.nix to include the disko-configuration and the default to configure everything not hardware related.
 
 # Goals
 

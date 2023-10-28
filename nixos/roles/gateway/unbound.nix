@@ -1,4 +1,4 @@
-{ pkgs, lib, dns, system, machines, toplevelDomain, ... }:
+{ pkgs, lib, dns, system, machine, machines, toplevelDomain, ... }:
 with lib;
 {
 
@@ -27,8 +27,7 @@ with lib;
         # Breaks my email setup. Better rely on tls for security.
         val-permissive-mode = "yes";
 
-        # todo : make this part configurable from the machine
-        access-control = [ "10.0.0.0/8 allow" ];
+        access-control = [ "${machine.cidr} allow" ];
         interface = [ "0.0.0.0" ];
 
         local-zone = ''"${toplevelDomain}." nodefault'';
@@ -38,7 +37,9 @@ with lib;
 
       stub-zone = {
         name = "${toplevelDomain}.";
-        stub-addr = "10.0.0.2@52";
+        # todo : find out if this works
+        #stub-addr = "${private_ipv4}@52";
+        stub-addr = "127.0.0.1@52";
       };
 
     };
