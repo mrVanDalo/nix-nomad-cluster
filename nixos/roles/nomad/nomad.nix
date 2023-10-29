@@ -79,8 +79,8 @@ in
 
       ui = {
         enabled = true;
-        consul.ui_url = "http://${(builtins.head consulMachines).private_ipv4}/ui";
-        vault.ui_url = "http://${(builtins.head vaultMachines).private_ipv4}/ui";
+        consul.ui_url = "http://${(builtins.head consulMachines).name}.${toplevelDomain}/ui";
+        vault.ui_url = "http://${(builtins.head vaultMachines).name}.${toplevelDomain}/ui";
       };
     };
   };
@@ -98,7 +98,7 @@ in
 
     extraConfig = {
       server = false;
-      retry_join = lib.flatten (map ({ private_ipv4, ... }: private_ipv4) consulMachines);
+      retry_join = lib.flatten (map ({ name, ... }: "${name}.${toplevelDomain}") consulMachines);
       retry_max = 3;
       retry_interval = "10s";
       ports.grpc = 8502;

@@ -10,7 +10,7 @@ job "whoami" {
     }
 
     service {
-      name = "whoami-demo"
+      name = "whoami"
       port = 80
 
       tags = [

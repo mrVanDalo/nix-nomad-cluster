@@ -1,4 +1,4 @@
-{ config, machines, lib, pkgs, ... }:
+{ config, machines, lib, pkgs, toplevelDomain, ... }:
 let
   consulMachines = builtins.filter ({ role, id, ... }: role == "consul") machines;
 in
@@ -32,7 +32,7 @@ in
 
       bootstrap_expect = 1;
 
-      retry_join = lib.flatten (map ({ private_ipv4, ... }: private_ipv4) consulMachines);
+      retry_join = lib.flatten (map ({ name, ... }: "${name}.toplevelDomain") consulMachines);
       retry_max = 3;
       retry_interval = "10s";
 

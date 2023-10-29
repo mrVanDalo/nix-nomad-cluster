@@ -1,4 +1,4 @@
-{ config, pkgs, lib, machines, machine, ... }:
+{ config, pkgs, lib, machines, machine, toplevelDomain, ... }:
 let
   nomadMachines = builtins.filter ({ role, id, ... }: role == "nomad") machines;
   consulMachines = builtins.filter ({ role, id, ... }: role == "consul") machines;
@@ -45,7 +45,7 @@ in
         static_configs = [
           {
             targets = map (ip: "${ip}:19999")
-              (lib.flatten (map ({ private_ipv4, ... }: private_ipv4) machines));
+              (lib.flatten (map ({ name, ... }: "${name}.${toplevelDomain}") machines));
             labels = {
               service = "netdata";
               environment = machine.environment;
@@ -60,8 +60,7 @@ in
         static_configs = [
           {
             targets = map (ip: "${ip}:9273")
-              (lib.flatten (map ({ private_ipv4, ... }: private_ipv4) machines));
-
+              (lib.flatten (map ({ name, ... }: "${name}.${toplevelDomain}") machines));
             labels = {
               service = "telegraf";
             };
@@ -72,14 +71,14 @@ in
       #  job_name = "nomad";
       #  scrape_interval = "5s";
       #  nomad_sd_configs =
-      #    map ({ private_ipv4, ... }: { server = "${private_ipv4}:8500"; })
+      #    map ({ name, ... }: { server = "${name}.${toplevelDomain}:8500"; })
       #      nomadMachines;
       #}
       {
         job_name = "consul";
         scrape_interval = "5s";
         consul_sd_configs =
-          map ({ private_ipv4, ... }: { server = "${private_ipv4}:8500"; })
+          map ({ name, ... }: { server = "${name}.${toplevelDomain}:8500"; })
             consulMachines;
         relabel_configs =
           map

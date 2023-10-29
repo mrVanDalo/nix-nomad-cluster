@@ -1,4 +1,4 @@
-{ config, pkgs, lib, machines, ... }:
+{ config, pkgs, lib, machines, toplevelDomain, ... }:
 with lib;
 with types;
 let
@@ -23,8 +23,8 @@ in
         };
         positions.filename = "/tmp/positions.yaml";
         clients = map
-          ({ private_ipv4, ... }:
-            { url = "http://${private_ipv4}:3100/loki/api/v1/push"; }
+          ({ name, ... }:
+            { url = "http://${name}.${toplevelDomain}:3100/loki/api/v1/push"; }
           )
           lokiServers;
 
