@@ -90,7 +90,10 @@
                   echo "🌐 SSH Host: ${host}"
                   echo
                   echo "🍕 ${command}"
-                  gum confirm "Really want to Re-Initalize ${machine}?" || exit 0
+                  if [[ "$1" != "yes" ]]
+                  then
+                    gum confirm "Really want to Re-Initalize ${machine}?" || exit 0
+                  fi
                   ${command}
                 '';
             in

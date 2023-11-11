@@ -16,7 +16,7 @@ job "whoami" {
       tags = [
         "traefik.enable=true",
         "traefik.consulcatalog.connect=true",
-        "traefik.http.routers.http.rule=Host(`whoami.apps.cluster`)",
+        "traefik.http.routers.whoami.rule=Host(`whoami.apps.cluster`)",
       ]
 
       connect {

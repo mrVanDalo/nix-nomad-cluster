@@ -15,6 +15,8 @@ in
       ${config.networking.hostName} = {
         default = true;
         locations."/" = {
+          proxyWebsockets = true;
+          recommendedProxySettings = true;
           proxyPass = "http://localhost:4646";
         };
       };

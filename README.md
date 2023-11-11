@@ -23,9 +23,16 @@ nix run .#apps.init.development_core_dev-cache
 nix run .#apps.update-cache.development_core_dev-cache
 nix run .#apps.build-kexec.development_core_dev-cache
 
+# update gateway
+nix run .#apps.apply.core_network_cor-net-gateway
+
 # set up monitor system
 nix run .#apps.init.development_core_dev-monitor
 ```
+
+## Troubleshooting
+
+- disable DNSSEC if `*.apps.cluster` not working.
 
 Now you can `init` all the other machines.
 
@@ -50,6 +57,7 @@ Now you can `init` all the other machines.
 - Use TPM https://www.freedesktop.org/software/systemd/man/latest/systemd-cryptenroll.html to unlook vault eventually.
 - Adjust Blocksize of nix-store on cache instance to improve spead
 - use role/<name>/configuration.nix to include the disko-configuration and the default to configure everything not hardware related.
+- properly configure DNSSEC
 
 # Goals
 

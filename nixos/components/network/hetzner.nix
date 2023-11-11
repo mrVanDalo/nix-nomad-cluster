@@ -12,6 +12,7 @@ with types;
 
   config = mkIf config.components.network.hetzner.enable {
 
+    # open firewall for machines in private network
     networking.firewall.enable = true;
     networking.firewall.allowedTCPPortRanges = [{ from = 0; to = 65535; }];
     networking.firewall.allowedUDPPortRanges = [{ from = 0; to = 65535; }];
